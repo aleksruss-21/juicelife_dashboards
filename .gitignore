@@ -2,7 +2,7 @@ sql_query.py
 .idea/
 */__pycache__/
 debug.log
-postgres/
+postgres12/
 make.py
 .mypy_cache/
 pyproject.toml
