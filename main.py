@@ -1,20 +1,18 @@
 from service.yandex import get_report
-from service.metrika import get_metrika
+from storage.database import get_active_users
 from apscheduler.schedulers.background import BlockingScheduler
 from loguru import logger
 
 
-def run() -> None:
-    """Parse data from Yandex.Direct and Yandex.Metrika"""
-    logger.info("Launching parse from Direct and Metrika.")
-    get_report()
-    get_metrika()
+def run_daily_upload() -> None:
+    """Parse daily data from Yandex.Direct"""
+    logger.info("Launching parse daily data from Direct")
+    active_users = get_active_users()
+    for dashboard_id, token in active_users:
+        get_report(token=token, dashboard_id=dashboard_id)
 
-run()
 
-
-# if __name__ == "__main__":
-#     scheduler = BlockingScheduler(timezone="Europe/Moscow")
-#     job = scheduler.add_job(run, "cron", hour=4, minute=12)
-#     scheduler.start()
-
+if __name__ == "__main__":
+    scheduler = BlockingScheduler(timezone="Europe/Moscow")
+    job = scheduler.add_job(run_daily_upload, "cron", hour=4, minute=12)
+    scheduler.start()

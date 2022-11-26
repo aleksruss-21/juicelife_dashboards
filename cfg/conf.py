@@ -8,11 +8,10 @@ class Config:
     def __init__(self):
         self.yandex_direct = self.YandexDirect()
         self.database = self.Database()
-        self.yandex_metrika = self.YandexMetrika()
 
     class YandexDirect:
         def __init__(self):
-            TOKEN_YANDEX = "token"
+            self.TOKEN_YANDEX = "token"
             self.url_direct_ads = "https://api.direct.yandex.com/json/v5/ads"
             self.url_direct_report = "https://api.direct.yandex.com/json/v5/reports"
             self.url_direct_clients = "https://api.direct.yandex.com/json/v5/clients"
@@ -21,11 +20,11 @@ class Config:
 
             # Headers for direct api request
             self.direct_headers = {
-                "Authorization": TOKEN_YANDEX,
+                "Authorization": self.TOKEN_YANDEX,
                 "Accept-Language": "en",
                 "skipReportHeader": "true",
                 "skipReportSummary": "true",
-                "returnMoneyInMicros": "false"
+                "returnMoneyInMicros": "false",
             }
 
             # JSON for report direct api request
@@ -58,37 +57,15 @@ class Config:
                     "DateRangeType": "CUSTOM_DATE",
                     "Format": "TSV",
                     "IncludeVAT": "NO",
-
                 }
             }
 
     class Database:
         def __init__(self):
-            self.dbname = "coraltravel"
-            self.user = "db_user"
+            self.dbname = "juicelife_dashboards"
+            self.user = "admin_juicelife"
             self.password = "mypassword"
-            self.host = "0"
-
-    class YandexMetrika:
-        def __init__(self):
-            self.url = "https://api-metrika.yandex.net/stat/v1/data"
-            self.metrika_id = "553380"
-            TOKEN_DIRECT = "token"
-            self.headers = {
-                "Authorization": TOKEN_DIRECT,
-                "Content-Type": "application/x-yametrika+json",
-            }
-
-            self.param = {
-                "ids": self.metrika_id,
-                "metrics": "ym:s:visits, ym:s:ecommercePurchases, ym:s:ecommerceRevenue",
-                "dimensions": "ym:s:date, ym:s:lastSignDirectClickOrder",
-                "date1": "2022-09-26",
-                "date2": "2022-11-24",
-                "accuracy": "full",
-                "currency": "RUB",
-                "limit": 100000
-            }
+            self.host = "0.0.0.0"
 
 
 def get_instance():
