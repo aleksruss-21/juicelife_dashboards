@@ -1,0 +1,9 @@
+sql_query.py
+.idea/
+*/__pycache__/
+debug.log
+postgres/
+make.py
+.mypy_cache/
+pyproject.toml
+setup.cfg

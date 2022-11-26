@@ -1,0 +1,6 @@
+.git/
+.mypy_cache/
+sql_query.py
+.idea
+*/__pycache__/
+debug.log
