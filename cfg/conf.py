@@ -66,6 +66,7 @@ class Config:
             self.user = "admin_juicelife"
             self.password = "mypassword"
             self.host = "0.0.0.0"
+            self.async_conn_query = f"dbname={self.dbname} user={self.user} host={self.host} password={self.password}"
 
 
 def get_instance():
