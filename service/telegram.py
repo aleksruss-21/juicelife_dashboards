@@ -4,7 +4,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types.message import Message
 
-from storage.database import add_user_tg, add_token_direct
+from storage.database import add_user_tg, add_token_direct, get_users_accounts
 from service.yandex_queries import URL_OAUTH, verify_direct, get_login_direct
 
 
@@ -51,5 +51,19 @@ def run_telegram():
             await bot.send_message(message.chat.id, "☑️ Успешная авторизация!")
         else:
             await bot.send_message(message.chat.id, "Введен неверный код. Попробуйте еще раз. /add_account")
+
+    @dp.message_handler(commands=["accounts"])
+    async def verified_accounts(message: Message) -> None:
+        """Send accounts of user with inline buttons"""
+        markup_logins = types.InlineKeyboardMarkup()
+        for login in await get_users_accounts(message):
+            btn = types.InlineKeyboardButton(login[0], callback_data="Test")
+            markup_logins.add(btn)
+
+        await bot.send_message(
+            message.chat.id,
+            "Список авторизованных аккаунтов в Яндекс.Директ:",
+            reply_markup=markup_logins,
+        )
 
     executor.start_polling(dispatcher=dp)

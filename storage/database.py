@@ -88,3 +88,15 @@ async def add_token_direct(telegram_id: int, token: str, login_direct: str) -> N
                     f"UPDATE dashboards SET token = '{token}' WHERE telegram_id = {telegram_id}"
                     f" AND login_direct = '{login_direct}'"
                 )
+
+
+async def get_users_accounts(message: Message) -> list:
+    """Get user's accounts from Direct"""
+
+    query = f"SELECT login FROM dashboards WHERE user_id = {message.chat.id}"
+
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(query)
+            accounts = await cur.fetchall()
+            return accounts
