@@ -86,7 +86,7 @@ async def add_token_direct(telegram_id: int, token: str, login_direct: str) -> N
             else:
                 await cur.execute(
                     f"UPDATE dashboards SET token = '{token}' WHERE telegram_id = {telegram_id}"
-                    f" AND login_direct = '{login_direct}'"
+                    f" AND login = '{login_direct}'"
                 )
 
 
@@ -100,3 +100,16 @@ async def get_users_accounts(message: Message) -> list:
             await cur.execute(query)
             accounts = await cur.fetchall()
             return accounts
+
+
+async def delete_dashboard_token(telegram_id: int, login: str) -> None:
+    """Delete user's accounts from Direct"""
+
+    query = (
+        f"UPDATE dashboards SET user_id = NULL, token = NULL, active = '0' WHERE user_id = {telegram_id}"
+        f" AND login = '{login}'"
+    )
+
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(query)

@@ -4,7 +4,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types.message import Message
 
-from storage.database import add_user_tg, add_token_direct, get_users_accounts
+from storage.database import add_user_tg, add_token_direct, get_users_accounts, delete_dashboard_token
 from service.yandex_queries import URL_OAUTH, verify_direct, get_login_direct
 
 
@@ -57,13 +57,44 @@ def run_telegram():
         """Send accounts of user with inline buttons"""
         markup_logins = types.InlineKeyboardMarkup()
         for login in await get_users_accounts(message):
-            btn = types.InlineKeyboardButton(login[0], callback_data="Test")
+            btn = types.InlineKeyboardButton(login[0], callback_data=f"acc_info|{login[0]}")
             markup_logins.add(btn)
 
         await bot.send_message(
             message.chat.id,
-            "Список авторизованных аккаунтов в Яндекс.Директ:",
+            "Список авторизованных аккаунтов в Яндекс.Директ. Кликните, чтобы удалить аккаунт:",
             reply_markup=markup_logins,
         )
+
+    @dp.callback_query_handler(lambda call: call.data.startswith("acc_info"))
+    async def ask_delete_acc(call: types.CallbackQuery, state: FSMContext) -> None:
+        """Callback of delete button. Asks if user really wants to delete acc"""
+        await bot.answer_callback_query(call.id)
+        login = call.data.split("|")[1]
+
+        markup = types.InlineKeyboardMarkup()
+        btn_yes = types.InlineKeyboardButton("Да", callback_data=f"delete|{login}")
+        btn_no = types.InlineKeyboardButton("Отмена", callback_data="back_main")
+        markup.row(btn_yes, btn_no)
+
+        await call.message.answer(f"Вы уверены, что хотите удалить доступы к аккаунту {login}?", reply_markup=markup)
+        await state.finish()
+
+    @dp.callback_query_handler(lambda call: call.data.startswith("delete"))
+    async def delete_acc(call: types.CallbackQuery, state: FSMContext) -> None:
+        """Delete token for direct account from database"""
+        await bot.answer_callback_query(call.id)
+        login = call.data.split("|")[1]
+        user_id = call.message.chat.id
+        await delete_dashboard_token(user_id, login)
+        await state.finish()
+        await bot.send_message(user_id, "Успешно удалено!")
+
+    @dp.callback_query_handler(lambda call: call.data == "back_main")
+    async def callback_back_main(call: types.CallbackQuery, state: FSMContext) -> None:
+        """Callback to cancel delete account"""
+        await bot.answer_callback_query(call.id)
+        await verified_accounts(call.message)
+        await state.finish()
 
     executor.start_polling(dispatcher=dp)
