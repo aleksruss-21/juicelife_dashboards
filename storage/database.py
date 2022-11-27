@@ -56,13 +56,13 @@ async def add_user_tg(message: Message) -> None:
     """Add to database new user of Telegram Bot"""
 
     query = (
-        f"INSERT INTO users (telegram_id, first_name, last_name, username) "
-        f"VALUES ('{message.chat.id}', '{message.chat.first_name}', '{message.chat.last_name}', '{message.chat.username}')"
+        f"INSERT INTO tg_users (telegram_id, first_name, last_name, username) VALUES "
+        f"('{message.chat.id}', '{message.chat.first_name}', '{message.chat.last_name}', '{message.chat.username}')"
     )
 
     async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
-            await cur.execute(f"SELECT * FROM users WHERE telegram_id = {message.chat.id}")
+            await cur.execute(f"SELECT * FROM tg_users WHERE telegram_id = {message.chat.id}")
             if await cur.fetchone() is None:
                 await cur.execute(query)
 
@@ -71,17 +71,16 @@ async def add_token_direct(telegram_id: int, token: str, login_direct: str) -> N
     """Add to database new ad account"""
     lock = asyncio.Lock()
 
-    async with await psycopg.AsyncConnection.connect(config.database.conn_query) as conn:
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
-            await cur.execute(
-                f"SELECT * FROM dashboards WHERE telegram_id = {telegram_id}" f" AND login_direct = '{login_direct}'"
-            )
+            await cur.execute(f"SELECT * FROM dashboards WHERE user_id = {telegram_id} AND login = '{login_direct}'")
             if await cur.fetchone() is None:
                 async with lock:
-                    count_dashboards = await cur.execute("SELECT COUNT(dashboard_id) FROM dashboards")[0]
+                    await cur.execute("SELECT COUNT(dashboard_id) FROM dashboards")
+                    count_dashboards = await cur.fetchone()
                 query = (
                     f"INSERT INTO dashboards (dashboard_id, user_id, token, active, login) "
-                    f"VALUES ('{count_dashboards}', '{telegram_id}', '{token}', '0', {login_direct})"
+                    f"VALUES ('{count_dashboards[0] + 1}', '{telegram_id}', 'Bearer {token}', '0', '{login_direct}')"
                 )
                 await cur.execute(query)
             else:

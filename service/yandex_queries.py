@@ -4,10 +4,10 @@ import requests
 URL_DIRECT_ADS = "https://api.direct.yandex.com/json/v5/ads"
 URL_DIRECT_REPORTS = "https://api.direct.yandex.com/json/v5/reports"
 URL_DIRECT_CLIENTS = "https://api.direct.yandex.com/json/v5/clients"
-URL_OAUTH = "https://oauth.yandex.ru/token"
-
 CLIENT_ID = "6e6aa9ec2f79451cb3e773a5f80f7ef0"
 CLIENT_SECRET = "0edf762fd750444190568a434004ffbe"
+URL_OAUTH = f"https://oauth.yandex.ru/authorize?response_type=code&client_id={CLIENT_ID}"
+VERIFY_URL = "https://oauth.yandex.ru/token"
 
 
 def get_daily_data_request(token: str, dashboard_id: int) -> requests.Response:
@@ -57,7 +57,7 @@ def get_daily_data_request(token: str, dashboard_id: int) -> requests.Response:
 async def verify_direct(code: str) -> str:
     """Verify code to get token"""
     data = {"grant_type": "authorization_code", "code": code, "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}
-    access_token = requests.post(URL_OAUTH, data=data).json()
+    access_token = requests.post(VERIFY_URL, data=data).json()
     if access_token.get("access_token") is not None:
         return access_token.get("access_token")
 
