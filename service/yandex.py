@@ -4,16 +4,16 @@ from loguru import logger
 import time
 
 
-def get_report(token: str, dashboard_id: int) -> None:
+def get_report(token: str, dashboard_id: int, goals: int) -> None:
     """Request data from Direct"""
-    response_report = get_daily_data_request(token, dashboard_id)
+    response_report = get_daily_data_request(token, dashboard_id, goals)
     if response_report.status_code == 200:
         logger.info("Successfully connected to Direct")
         csv_direct = response_report.text
         process_direct(csv_direct, dashboard_id)
     elif response_report.status_code == 201:
         time.sleep(20)
-        get_report(token, dashboard_id)
+        get_report(token, dashboard_id, goals)
     else:
         logger.error(
             f"Error while connecting to Yandex.Direct. Response {response_report.status_code}. {response_report.text}"

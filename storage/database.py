@@ -23,22 +23,32 @@ CREATE TABLE IF NOT EXISTS dashboard_{dashboard_id} (
     date DATE NOT NULL,
     campaign_id INTEGER NOT NULL,
     campaign_name VARCHAR,
+    campaign_type VARCHAR,
+    ad_group_id BIGINT NOT NULL,
+    ad_group_name VARCHAR,
+    age VARCHAR,
+    targeting_location_id INTEGER,
+    targeting_location_name VARCHAR,
+    gender VARCHAR,
     criterion VARCHAR,
+    criterion_id BIGINT,
+    criterion_type VARCHAR,
+    device VARCHAR,
     impressions INTEGER,
     clicks INTEGER,
     cost REAL,
+    bounces INTEGER,
     conversions INTEGER
 );
 
-INSERT INTO dashboard_{dashboard_id} (date, campaign_id, campaign_name, criterion, impressions, clicks, cost)
-VALUES ({report}) """
+INSERT INTO dashboard_{dashboard_id} VALUES ({report}) """
     )
     conn.commit()
     conn.close()
     logger.info(f"Successfully uploaded to database from Yandex.Direct. {report}")
 
 
-def get_active_users() -> list[tuple[int, str]]:
+def get_active_users() -> list[tuple[int, str, int]]:
     """Get from database active users for getting Data from Yandex.Direct"""
     conn = psycopg2.connect(
         dbname=config.database.dbname,
@@ -48,7 +58,7 @@ def get_active_users() -> list[tuple[int, str]]:
     )
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM dashboards WHERE active = '1'")
-    active_users = [(row[0], row[2]) for row in cursor.fetchall()]
+    active_users = [(row[0], row[2], row[5]) for row in cursor.fetchall()]
     return active_users
 
 

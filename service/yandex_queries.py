@@ -10,7 +10,7 @@ URL_OAUTH = f"https://oauth.yandex.ru/authorize?response_type=code&client_id={CL
 VERIFY_URL = "https://oauth.yandex.ru/token"
 
 
-def get_daily_data_request(token: str, dashboard_id: int) -> requests.Response:
+def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> requests.Response:
     """Request to Yandex.Direct API to get daily data"""
     direct_headers = {
         "Authorization": token,
@@ -31,18 +31,30 @@ def get_daily_data_request(token: str, dashboard_id: int) -> requests.Response:
                     }
                 ],
             },
-            # "AttributionModels": ["LSC"],
+            "Goals": [goals],
+            "AttributionModels": ["LSC"],
             "FieldNames": [
                 "Date",
                 "CampaignId",
                 "CampaignName",
+                "CampaignType",
+                "AdGroupId",
+                "AdGroupName",
+                "Age",
+                "TargetingLocationId",
+                "TargetingLocationName",
+                "Gender",
                 "Criterion",
+                "CriterionId",
+                "CriterionType",
+                "Device",
                 "Impressions",
                 "Clicks",
                 "Cost",
-                # "Conversions",
+                "Bounces",
+                "Conversions",
             ],
-            "ReportName": f"Report_{date.today()}_{dashboard_id}_test",
+            "ReportName": f"Report_{date.today()}_{dashboard_id}",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "YESTERDAY",
             "Format": "TSV",
