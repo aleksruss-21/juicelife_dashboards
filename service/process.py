@@ -14,6 +14,9 @@ def process_direct(report: str, dashboard_id: int) -> None:
         for data in row:
             if data == "--":
                 data = 0
+            if isinstance(data, str):
+                if data.endswith("'"):
+                    data = data[:-1]
             if row["CampaignId"] is not None:
                 arr.append(f"'{data}'")
 

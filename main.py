@@ -9,12 +9,12 @@ def run_daily_upload() -> None:
     """Parse daily data from Yandex.Direct"""
     logger.info("Launching parse daily data from Direct")
     active_users = get_active_users()
-    for dashboard_id, token in active_users:
-        get_report(token=token, dashboard_id=dashboard_id)
+    for dashboard_id, token, goal in active_users:
+        get_report(token=token, dashboard_id=dashboard_id, goals=goal)
 
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler(timezone="Europe/Moscow")
-    job = scheduler.add_job(run_daily_upload, "cron", hour=15, minute=36)
+    job = scheduler.add_job(run_daily_upload, "cron", hour=4, minute=10)
     scheduler.start()
     run_telegram()
