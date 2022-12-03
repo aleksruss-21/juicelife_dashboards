@@ -95,9 +95,20 @@ async def add_token_direct(telegram_id: int, token: str, login_direct: str) -> N
                 await cur.execute(query)
             else:
                 await cur.execute(
-                    f"UPDATE dashboards SET token = '{token}' WHERE telegram_id = {telegram_id}"
+                    f"UPDATE dashboards SET token = '{token}' WHERE user_id = {telegram_id}"
                     f" AND login = '{login_direct}'"
                 )
+
+
+async def add_goal_id_direct(telegram_id: int, goal_id: str, login_direct: str) -> None:
+    """Add to database new ad account"""
+
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
+        async with conn.cursor() as cur:
+            await cur.execute(
+                f"UPDATE dashboards SET goals_1 = '{goal_id}' WHERE user_id = {telegram_id}"
+                f" AND login = '{login_direct}'"
+            )
 
 
 async def get_users_accounts(message: Message) -> list:
