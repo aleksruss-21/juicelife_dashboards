@@ -4,11 +4,19 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types.message import Message
 
-from storage.database import add_user_tg, add_token_direct, get_users_accounts, delete_dashboard_token
+import service.yandex
+from storage.database import (
+    add_user_tg,
+    add_token_direct,
+    get_users_accounts,
+    delete_dashboard_token,
+    add_goal_id_direct,
+)
 from service.yandex_queries import URL_OAUTH, verify_direct, get_login_direct
 
 
 def run_telegram():
+    """Run telegram instance"""
     tg_token = "5601478515:AAHxOEstj9wNxAxtPXLSXiGhWEGWHsgGeTY"
     bot = Bot(tg_token)
     storage = MemoryStorage()
@@ -16,6 +24,10 @@ def run_telegram():
 
     class Form(StatesGroup):
         get_token = State()
+        get_goal_id = State()
+        login = State()
+        goals = State()
+        token = State()
 
     @dp.message_handler(commands=["start"])
     async def send_welcome(message: Message) -> None:
@@ -28,6 +40,7 @@ def run_telegram():
 
     @dp.message_handler(commands=["add_account"])
     async def account(message: Message) -> None:
+        """Add account to database /add_account"""
         btn_login = types.InlineKeyboardButton("Авторизоваться", url=URL_OAUTH)
         markup_login = types.InlineKeyboardMarkup().add(btn_login)
 
@@ -39,18 +52,58 @@ def run_telegram():
         await Form.get_token.set()
 
     @dp.message_handler(state=Form.get_token)
-    async def verify_code(message: types.message.Message, state: FSMContext):
+    async def verify_code(message: types.message.Message, state: FSMContext) -> None:
         async with state.proxy() as data:
             data["get_token"] = message.text
             await state.finish()
 
         token = await verify_direct(message.text)
         if token:
+
             login = await get_login_direct(token)
+            async with state.proxy() as data:
+                data["login"] = login
+                data["token"] = token
+                await state.finish()
             await add_token_direct(message.chat.id, token, login)
             await bot.send_message(message.chat.id, "☑️ Успешная авторизация!")
+            await set_goals(message, token, state)
         else:
             await bot.send_message(message.chat.id, "Введен неверный код. Попробуйте еще раз. /add_account")
+
+    async def set_goals(message: Message, token: str, state: FSMContext) -> None:
+        """Ask user to set goal id number"""
+        await bot.send_message(message.chat.id, "Выберите цель, которую будете отслеживать в дашборде:")
+        goals = await service.yandex.arr_goals(token)
+
+        async with state.proxy() as data:
+            data["goals"] = [str(goal["goal_id"]) for goal in goals]
+            await state.finish()
+
+        arr_str = ""
+        for goal in goals:
+            arr_str += f"<b>{goal['goal_id']}</b> - {goal['name']}\n"
+            if len(arr_str) > 3000:
+                await bot.send_message(message.chat.id, arr_str, parse_mode="HTML")
+                arr_str = ""
+
+        await Form.get_goal_id.set()
+
+    @dp.message_handler(state=Form.get_goal_id)
+    async def get_goal_id(message: Message, state: FSMContext) -> None:
+        async with state.proxy() as data:
+            data["get_goal_id"] = message.text
+            login = data["login"]
+            goals = data["goals"]
+            token = data["token"]
+            await state.finish()
+
+        if str(message.text) in goals:
+            await add_goal_id_direct(message.chat.id, message.text, login)
+            await bot.send_message(message.chat.id, "Добавлено!")
+        else:
+            await bot.send_message(message.chat.id, "Не существует такой цели.")
+            await set_goals(message, token, state)
 
     @dp.message_handler(commands=["accounts"])
     async def verified_accounts(message: Message) -> None:

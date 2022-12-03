@@ -1,3 +1,4 @@
+import service.yandex_queries
 from service.yandex_queries import get_daily_data_request
 from service.process import process_direct
 from loguru import logger
@@ -18,3 +19,21 @@ def get_report(token: str, dashboard_id: int, goals: int) -> None:
         logger.error(
             f"Error while connecting to Yandex.Direct. Response {response_report.status_code}. {response_report.text}"
         )
+
+
+async def arr_goals(token: str) -> list[dict]:
+    """Process yandex query to get goals"""
+    campaign = await get_arr_campaigns(token)
+    response_report = await service.yandex_queries.get_arr_goals(token, campaign)
+    goals = [{"name": item["Name"], "goal_id": item["GoalID"]} for item in response_report.json()["data"]]
+    return goals
+
+
+async def get_arr_campaigns(token: str) -> str:
+    """Process yandex query to get campaign ID"""
+    resp = await service.yandex_queries.get_arr_campaigns(token)
+    try:
+        arr = resp.text.split("\n")[1]
+        return arr
+    except IndexError:
+        await get_arr_campaigns(token)
