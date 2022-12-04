@@ -10,7 +10,7 @@ from aiogram.types.message import Message
 
 def upload_direct(report: str, dashboard_id: int) -> None:
     """Upload report from Yandex.Direct to database"""
-    arr_report = report.split(',')
+    arr_report = report.split('|||')
     date_row = arr_report[0]
     campaign_id = arr_report[1]
     ad_group_id = arr_report[4]
@@ -25,6 +25,8 @@ def upload_direct(report: str, dashboard_id: int) -> None:
     cost = arr_report[16]
     bounces = arr_report[17]
     conversions = arr_report[18]
+
+    report = report.replace("|||", ",")
 
     conn = psycopg2.connect(
         dbname=config.database.dbname,
