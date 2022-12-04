@@ -10,6 +10,22 @@ from aiogram.types.message import Message
 
 def upload_direct(report: str, dashboard_id: int) -> None:
     """Upload report from Yandex.Direct to database"""
+    arr_report = report.split(',')
+    date_row = arr_report[0]
+    campaign_id = arr_report[1]
+    ad_group_id = arr_report[4]
+    age = arr_report[6]
+    target_location_id = arr_report[7]
+    gender = arr_report[9]
+    criterion = arr_report[11]
+    device = arr_report[13]
+
+    impressions = arr_report[14]
+    clicks = arr_report[15]
+    cost = arr_report[16]
+    bounces = arr_report[17]
+    conversions = arr_report[18]
+
     conn = psycopg2.connect(
         dbname=config.database.dbname,
         user=config.database.user,
@@ -19,30 +35,36 @@ def upload_direct(report: str, dashboard_id: int) -> None:
     cursor = conn.cursor()
     cursor.execute(
         f"""
-CREATE TABLE IF NOT EXISTS dashboard_{dashboard_id} (
-    date DATE NOT NULL,
-    campaign_id INTEGER NOT NULL,
-    campaign_name VARCHAR,
-    campaign_type VARCHAR,
-    ad_group_id BIGINT NOT NULL,
-    ad_group_name VARCHAR,
-    age VARCHAR,
-    targeting_location_id INTEGER,
-    targeting_location_name VARCHAR,
-    gender VARCHAR,
-    criterion VARCHAR,
-    criterion_id BIGINT,
-    criterion_type VARCHAR,
-    device VARCHAR,
-    impressions INTEGER,
-    clicks INTEGER,
-    cost REAL,
-    bounces INTEGER,
-    conversions INTEGER
-);
-
-INSERT INTO dashboard_{dashboard_id} VALUES ({report}) """
-    )
+    SELECT EXISTS (SELECT * FROM dashboard_{dashboard_id} WHERE
+        date = {date_row} AND
+        campaign_id = {campaign_id} AND
+        ad_group_id = {ad_group_id} AND
+        age = {age} AND
+        targeting_location_id = {target_location_id} AND
+        gender = {gender} AND
+        criterion_id = {criterion} AND
+        device = {device});""")
+    if cursor.fetchone()[0] is True:
+        cursor.execute(f"""
+        UPDATE dashboard_{dashboard_id}
+             SET
+                impressions = {impressions},
+                clicks = {clicks},
+                cost = {cost},
+                bounces = {bounces},
+                conversions = {conversions}
+             WHERE
+                date = {date_row} AND
+                campaign_id = {campaign_id} AND
+                ad_group_id = {ad_group_id} AND
+                age = {age} AND
+                targeting_location_id = {target_location_id} AND
+                gender = {gender} AND
+                criterion_id = {criterion} AND
+                device = {device};"""
+                       )
+    else:
+        cursor.execute(f"""INSERT INTO dashboard_{dashboard_id} VALUES ({report})""")
     conn.commit()
     conn.close()
     logger.info(f"Successfully uploaded to database from Yandex.Direct. {report}")
