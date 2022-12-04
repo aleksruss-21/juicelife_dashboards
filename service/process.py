@@ -19,6 +19,6 @@ def process_direct(report: str, dashboard_id: int) -> None:
             if row["CampaignId"] is not None:
                 arr.append(f"'{data}'")
 
-        report_row = ",".join(arr)
+        report_row = "|||".join(arr)
         if arr:
             database.upload_direct(report_row, dashboard_id)
