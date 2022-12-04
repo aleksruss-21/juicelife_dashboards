@@ -26,7 +26,7 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
             "SelectionCriteria": {
                 "Filter": [
                     {
-                        "Field": "Clicks",
+                        "Field": "Impressions",
                         "Operator": "GREATER_THAN",
                         "Values": ["0"],
                     }
