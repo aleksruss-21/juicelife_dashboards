@@ -10,7 +10,7 @@ from aiogram.types.message import Message
 
 def upload_direct(report: str, dashboard_id: int) -> None:
     """Upload report from Yandex.Direct to database"""
-    arr_report = report.split('|||')
+    arr_report = report.split("|||")
     date_row = arr_report[0]
     campaign_id = arr_report[1]
     ad_group_id = arr_report[4]
@@ -45,9 +45,11 @@ def upload_direct(report: str, dashboard_id: int) -> None:
         targeting_location_id = {target_location_id} AND
         gender = {gender} AND
         criterion_id = {criterion} AND
-        device = {device});""")
+        device = {device});"""
+    )
     if cursor.fetchone()[0] is True:
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
         UPDATE dashboard_{dashboard_id}
              SET
                 impressions = {impressions},
@@ -64,7 +66,7 @@ def upload_direct(report: str, dashboard_id: int) -> None:
                 gender = {gender} AND
                 criterion_id = {criterion} AND
                 device = {device};"""
-                       )
+        )
     else:
         cursor.execute(f"""INSERT INTO dashboard_{dashboard_id} VALUES ({report})""")
     conn.commit()
