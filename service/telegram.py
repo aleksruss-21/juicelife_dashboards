@@ -4,6 +4,7 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types.message import Message
 
+import cfg
 import service.yandex
 from storage.database import (
     add_user_tg,
@@ -17,8 +18,10 @@ from service.yandex_queries import URL_OAUTH, verify_direct, get_login_direct
 
 def run_telegram():
     """Run telegram instance"""
-    tg_token = "5601478515:AAHxOEstj9wNxAxtPXLSXiGhWEGWHsgGeTY"
+    tg_token = cfg.config.telegram.tg_token
+    tg_nots_token = cfg.config.telegram.tg_nots_token
     bot = Bot(tg_token)
+    aleks_bot = Bot(tg_nots_token)
     storage = MemoryStorage()
     dp = Dispatcher(bot, storage=storage)
 
@@ -33,6 +36,19 @@ def run_telegram():
     async def send_welcome(message: Message) -> None:
         """Welcome message after /start commands"""
         await add_user_tg(message)
+
+        await aleks_bot.send_message(
+            90785234,
+            f"""
+<b>Juice.Direct | Новый подписчик!</b>
+
+id: {message.chat.id}
+username: @{message.chat.username}
+Имя: {message.chat.first_name}
+Фамилия: {message.chat.last_name}""",
+            parse_mode="HTML",
+        )
+
         await bot.send_message(
             message.chat.id,
             "Бот-помощник по рекламе в Яндекс.Директ. Используй /add_account, чтобы авторизовать аккаунт Яндекс.Директ",
@@ -67,6 +83,17 @@ def run_telegram():
                 await state.finish()
             await add_token_direct(message.chat.id, token, login)
             await bot.send_message(message.chat.id, "☑️ Успешная авторизация!")
+
+            await aleks_bot.send_message(
+                90785234,
+                f"""
+<b>Juice.Direct | Успешная авторизация!</b>
+
+username: @{message.chat.username}
+login: {login}""",
+                parse_mode="HTML",
+            )
+
             await set_goals(message, token, state)
         else:
             await bot.send_message(message.chat.id, "Введен неверный код. Попробуйте еще раз. /add_account")

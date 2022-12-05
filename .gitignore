@@ -9,3 +9,4 @@ pyproject.toml
 setup.cfg
 test.txt
 upload_history_manual.py
+cfg/.env
