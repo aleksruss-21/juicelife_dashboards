@@ -14,7 +14,7 @@ GOALS_URL = "https://api.direct.yandex.ru/live/v4/json/"
 def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> requests.Response:
     """Request to Yandex.Direct API to get daily data"""
     direct_headers = {
-        "Authorization": token,
+        "Authorization": f"Bearer {token}",
         "Accept-Language": "en",
         "skipReportHeader": "true",
         "skipReportSummary": "true",
