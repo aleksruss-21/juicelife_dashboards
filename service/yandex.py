@@ -12,7 +12,7 @@ def get_report(token: str, dashboard_id: int, goals: int) -> None:
         logger.info("Successfully connected to Direct")
         csv_direct = response_report.text
         process_direct(csv_direct, dashboard_id)
-    elif response_report.status_code == 201:
+    elif response_report.status_code == 201 or response_report.status_code == 202:
         time.sleep(20)
         get_report(token, dashboard_id, goals)
     else:
