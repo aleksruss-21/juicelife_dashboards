@@ -24,13 +24,6 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
     direct_params = {
         "params": {
             "SelectionCriteria": {
-                "Filter": [
-                    {
-                        "Field": "Impressions",
-                        "Operator": "GREATER_THAN",
-                        "Values": ["0"],
-                    }
-                ],
             },
             "Goals": [goals],
             "AttributionModels": ["LSC"],
