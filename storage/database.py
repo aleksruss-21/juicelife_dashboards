@@ -8,7 +8,7 @@ import psycopg
 from aiogram.types.message import Message
 
 
-def upload_direct(report: str, dashboard_id: int) -> None:
+def upload_direct(report: str, dashboard_id: int, yesterday: bool) -> None:
     """Upload report from Yandex.Direct to database"""
     arr_report = report.split("|||")
     date_row = arr_report[0]
@@ -35,19 +35,9 @@ def upload_direct(report: str, dashboard_id: int) -> None:
         host=config.database.host,
     )
     cursor = conn.cursor()
-    cursor.execute(
-        f"""
-    SELECT EXISTS (SELECT * FROM dashboard_{dashboard_id} WHERE
-        date = {date_row} AND
-        campaign_id = {campaign_id} AND
-        ad_group_id = {ad_group_id} AND
-        age = {age} AND
-        targeting_location_id = {target_location_id} AND
-        gender = {gender} AND
-        criterion_id = {criterion} AND
-        device = {device});"""
-    )
-    if cursor.fetchone()[0] is True:
+    if yesterday is True:
+        cursor.execute(f"INSERT INTO dashboard_{dashboard_id} VALUES ({report})")
+    else:
         cursor.execute(
             f"""
         UPDATE dashboard_{dashboard_id}
@@ -67,11 +57,9 @@ def upload_direct(report: str, dashboard_id: int) -> None:
                 criterion_id = {criterion} AND
                 device = {device};"""
         )
-    else:
-        cursor.execute(f"""INSERT INTO dashboard_{dashboard_id} VALUES ({report})""")
     conn.commit()
     conn.close()
-    logger.info(f"Successfully uploaded to database from Yandex.Direct. {report}")
+    logger.debug(f"Successfully uploaded to database from Yandex.Direct. {report}")
 
 
 def get_active_users() -> list[tuple[int, str, int]]:

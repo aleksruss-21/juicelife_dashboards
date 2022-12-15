@@ -16,7 +16,7 @@ class Config:
             self.dbname = "juicelife_dashboards"
             self.user = os.environ.get("LOGIN_DB")
             self.password = os.environ.get("PASSWORD_DB")
-            self.host = "postgres12"
+            self.host = "134.0.113.22"
             self.async_conn_query = f"dbname={self.dbname} user={self.user} host={self.host} password={self.password}"
 
     class Telegram:

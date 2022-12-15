@@ -18,13 +18,11 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
         "Accept-Language": "en",
         "skipReportHeader": "true",
         "skipReportSummary": "true",
-        "returnMoneyInMicros": "false",
     }
 
     direct_params = {
         "params": {
-            "SelectionCriteria": {
-            },
+            "SelectionCriteria": {},
             "Goals": [goals],
             "AttributionModels": ["LSC"],
             "FieldNames": [
@@ -50,7 +48,7 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
             ],
             "ReportName": f"Report_{date.today()}_{dashboard_id}",
             "ReportType": "CUSTOM_REPORT",
-            "DateRangeType": "YESTERDAY",
+            "DateRangeType": "AUTO",
             "Format": "TSV",
             "IncludeVAT": "NO",
         }

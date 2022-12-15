@@ -15,6 +15,6 @@ def run_daily_upload() -> None:
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler(timezone="Europe/Moscow")
-    job = scheduler.add_job(run_daily_upload, "cron", hour=4, minute=10)
+    job = scheduler.add_job(run_daily_upload, "cron", hour=3, minute=10)
     scheduler.start()
     run_telegram()
