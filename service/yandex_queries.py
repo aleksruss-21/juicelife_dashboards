@@ -18,6 +18,7 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
         "Accept-Language": "en",
         "skipReportHeader": "true",
         "skipReportSummary": "true",
+        "returnMoneyInMicros": "false",
     }
 
     direct_params = {
