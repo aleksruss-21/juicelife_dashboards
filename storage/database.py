@@ -1,65 +1,35 @@
 import asyncio
 
+import pandas
 import psycopg2
+import sqlalchemy.future
+
 from cfg import config
 from loguru import logger
 
 import psycopg
 from aiogram.types.message import Message
+from sqlalchemy import create_engine
 
 
-def upload_direct(report: str, dashboard_id: int, yesterday: bool) -> None:
-    """Upload report from Yandex.Direct to database"""
-    arr_report = report.split("|||")
-    date_row = arr_report[0]
-    campaign_id = arr_report[1]
-    ad_group_id = arr_report[4]
-    age = arr_report[6]
-    target_location_id = arr_report[7]
-    gender = arr_report[9]
-    criterion = arr_report[11]
-    device = arr_report[13]
-
-    impressions = arr_report[14]
-    clicks = arr_report[15]
-    cost = arr_report[16]
-    bounces = arr_report[17]
-    conversions = arr_report[18]
-
-    report = report.replace("|||", ",")
-
-    conn = psycopg2.connect(
-        dbname=config.database.dbname,
-        user=config.database.user,
-        password=config.database.password,
-        host=config.database.host,
+def create_instance() -> sqlalchemy.future.Engine:
+    """Create connection to database"""
+    engine = create_engine(
+        f"postgresql+psycopg2://"
+        f"{config.database.user}:{config.database.password}@{config.database.host}/{config.database.dbname}"
     )
-    cursor = conn.cursor()
-    if yesterday is True:
-        cursor.execute(f"INSERT INTO dashboard_{dashboard_id} VALUES ({report})")
-    else:
-        cursor.execute(
-            f"""
-        UPDATE dashboard_{dashboard_id}
-             SET
-                impressions = {impressions},
-                clicks = {clicks},
-                cost = {cost},
-                bounces = {bounces},
-                conversions = {conversions}
-             WHERE
-                date = {date_row} AND
-                campaign_id = {campaign_id} AND
-                ad_group_id = {ad_group_id} AND
-                age = {age} AND
-                targeting_location_id = {target_location_id} AND
-                gender = {gender} AND
-                criterion_id = {criterion} AND
-                device = {device};"""
-        )
-    conn.commit()
-    conn.close()
-    logger.debug(f"Successfully uploaded to database from Yandex.Direct. {report}")
+    return engine
+
+
+def upload_direct_from_pandas(df: pandas.DataFrame, dashboard_id: int, connect: sqlalchemy.future.Engine) -> None:
+    """Upload report to database using pandas"""
+    df.to_sql(f"dashboard_{dashboard_id}", con=connect, if_exists="append", index=False)
+    logger.info(f"Successfully uploaded for dashboard_{dashboard_id}!")
+
+
+def delete_from_report(date: str, dashboard_id: int, conn: sqlalchemy.future.Engine) -> None:
+    """Delete from database income dates to upload later"""
+    conn.execute(f"DELETE from dashboard_{dashboard_id} WHERE date = '{date}'")
 
 
 def get_active_users() -> list[tuple[int, str, int]]:
