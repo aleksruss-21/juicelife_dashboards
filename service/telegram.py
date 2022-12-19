@@ -28,6 +28,7 @@ def run_telegram():
     class Form(StatesGroup):
         get_token = State()
         get_goal_id = State()
+        get_goal_id_manual = State()
         login = State()
         goals = State()
         token = State()
@@ -75,7 +76,6 @@ username: @{message.chat.username}
 
         token = await verify_direct(message.text)
         if token:
-
             login = await get_login_direct(token)
             async with state.proxy() as data:
                 data["login"] = login
@@ -103,28 +103,48 @@ login: {login}""",
         await bot.send_message(message.chat.id, "Выберите цель, которую будете отслеживать в дашборде:")
         goals = await service.yandex.arr_goals(token)
 
+        if goals == "Error | Key Error":
+            await bot.send_message(
+                message.chat.id,
+                "Получить список целей не удалось.",
+            )
+            await bot.send_message(message.chat.id, "Введите id цели самостоятельно. Его можно найти в Яндекс.Метрике.")
+            await bot.send_message(message.chat.id, "Если возникли проблемы, напишите @aleksruss")
+            await Form.get_goal_id_manual.set()
+
+        else:
+            async with state.proxy() as data:
+                data["goals"] = [str(goal["goal_id"]) for goal in goals]
+                await state.finish()
+
+            arr_str = ""
+            for goal in goals:
+                arr_str += f"<b>{goal['goal_id']}</b> - {goal['name']}\n"
+                if len(arr_str) > 3000:
+                    await bot.send_message(message.chat.id, arr_str, parse_mode="HTML", disable_web_page_preview=True)
+                    arr_str = ""
+
+            await Form.get_goal_id.set()
+
+    @dp.message_handler(state=Form.get_goal_id_manual)
+    async def get_goal_id_manual(message: Message, state: FSMContext) -> None:
+        """Manual add goal"""
         async with state.proxy() as data:
-            data["goals"] = [str(goal["goal_id"]) for goal in goals]
+            data["get_goal_id"] = message.text
+            login = data["login"]
             await state.finish()
-
-        arr_str = ""
-        for goal in goals:
-            arr_str += f"<b>{goal['goal_id']}</b> - {goal['name']}\n"
-            if len(arr_str) > 3000:
-                await bot.send_message(message.chat.id, arr_str, parse_mode="HTML")
-                arr_str = ""
-
-        await Form.get_goal_id.set()
+            await add_goal_id_direct(message.chat.id, message.text, login)
+            await bot.send_message(message.chat.id, "Добавлено!")
 
     @dp.message_handler(state=Form.get_goal_id)
     async def get_goal_id(message: Message, state: FSMContext) -> None:
+        """Auto add goal"""
         async with state.proxy() as data:
             data["get_goal_id"] = message.text
             login = data["login"]
             goals = data["goals"]
             token = data["token"]
             await state.finish()
-
         if str(message.text) in goals:
             await add_goal_id_direct(message.chat.id, message.text, login)
             await bot.send_message(message.chat.id, "Добавлено!")

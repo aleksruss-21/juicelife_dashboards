@@ -88,7 +88,6 @@ async def get_login_direct(token: str) -> str:
 async def get_arr_goals(token: str, campaign: str) -> requests.Response:
     """Query to get list of goals"""
     direct_params = {"method": "GetStatGoals", "token": token, "param": {"CampaignID": campaign}}
-
     response_report = requests.post(GOALS_URL, json=direct_params)
     return response_report
 
@@ -107,9 +106,9 @@ async def get_arr_campaigns(token: str) -> requests.Response:
             "FieldNames": [
                 "CampaignId",
             ],
-            "ReportName": "Get_CampaignsID",
+            "ReportName": "Get_CampaignsID_date",
             "ReportType": "CUSTOM_REPORT",
-            "DateRangeType": "LAST_MONTH",
+            "DateRangeType": "LAST_30_DAYS",
             "Format": "TSV",
             "IncludeVAT": "NO",
         }

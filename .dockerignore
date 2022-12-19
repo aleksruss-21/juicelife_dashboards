@@ -4,3 +4,8 @@ sql_query.py
 .idea
 */__pycache__/
 debug.log
+test.txt
+setup.cfg
+upload_history_manual.py
+pyproject.toml
+make.py
