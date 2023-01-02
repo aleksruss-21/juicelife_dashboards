@@ -1,4 +1,4 @@
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot, Dispatcher, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -15,15 +15,16 @@ from storage.database import (
 )
 from service.yandex_queries import URL_OAUTH, verify_direct, get_login_direct
 
+tg_token = cfg.config.telegram.tg_token
+tg_nots_token = cfg.config.telegram.tg_nots_token
+bot = Bot(tg_token)
+aleks_bot = Bot(tg_nots_token)
+storage = MemoryStorage()
+dp = Dispatcher(bot, storage=storage)
+
 
 def run_telegram():
     """Run telegram instance"""
-    tg_token = cfg.config.telegram.tg_token
-    tg_nots_token = cfg.config.telegram.tg_nots_token
-    bot = Bot(tg_token)
-    aleks_bot = Bot(tg_nots_token)
-    storage = MemoryStorage()
-    dp = Dispatcher(bot, storage=storage)
 
     class Form(StatesGroup):
         get_token = State()
@@ -197,4 +198,18 @@ login: {login}""",
         await verified_accounts(call.message)
         await state.finish()
 
-    executor.start_polling(dispatcher=dp)
+
+async def telegram_daily(mg: tuple, tg_id: int) -> None:
+    """Send telegram daily"""
+    for message in mg:
+        await bot.send_message(tg_id, message, parse_mode="HTML")
+    await aleks_bot.send_message(
+        90785234,
+        f"""
+<b>Juice.Direct | {tg_id} отправлено!</b>)""",
+        parse_mode="HTML",
+    )
+    session = await bot.get_session()
+    session_tg = await aleks_bot.get_session()
+    await session.close()
+    await session_tg.close()

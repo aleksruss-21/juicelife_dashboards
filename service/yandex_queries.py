@@ -59,6 +59,42 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
     return response_report
 
 
+def get_daily_data_request_tg(token: str, dashboard_id: int, goals: int) -> requests.Response:
+    """Request to Yandex.Direct API to get daily data for telegram bot"""
+    direct_headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept-Language": "en",
+        "skipReportHeader": "true",
+        "skipReportSummary": "true",
+        "returnMoneyInMicros": "false",
+    }
+
+    direct_params = {
+        "params": {
+            "SelectionCriteria": {},
+            "Goals": [goals],
+            "AttributionModels": ["LSC"],
+            "FieldNames": [
+                "Date",
+                "CampaignName",
+                "Criterion",
+                "Impressions",
+                "Clicks",
+                "Cost",
+                "Conversions",
+            ],
+            "ReportName": f"Report_for_tg_{date.today()}_{dashboard_id}",
+            "ReportType": "CUSTOM_REPORT",
+            "DateRangeType": "YESTERDAY",
+            "Format": "TSV",
+            "IncludeVAT": "NO",
+        }
+    }
+
+    response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
+    return response_report
+
+
 async def verify_direct(code: str) -> str:
     """Verify code to get token"""
     data = {"grant_type": "authorization_code", "code": code, "client_id": CLIENT_ID, "client_secret": CLIENT_SECRET}

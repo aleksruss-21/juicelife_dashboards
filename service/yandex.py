@@ -1,8 +1,8 @@
 import asyncio
 
 import service.yandex_queries
-from service.yandex_queries import get_daily_data_request
-from service.process import process_direct
+from service.yandex_queries import get_daily_data_request, get_daily_data_request_tg
+from service.process import process_direct, process_direct_tg, make_messages
 from loguru import logger
 import time
 
@@ -53,3 +53,23 @@ async def get_arr_campaigns(token: str) -> str:
     else:
         logger.error(f"Error while getting list of campaigns to get login. {resp.status_code}, {resp.text}")
         await get_arr_campaigns(token)
+
+
+def get_report_tg(token: str, dashboard_id: int, goals: int, tg_id: int, login: str) -> tuple[str, str, str]:
+    """Request data from Direct"""
+    response_report = get_daily_data_request_tg(token, dashboard_id, goals)
+    if response_report.status_code == 200:
+        logger.info(f"Successfully connected to Direct {login}")
+        csv_direct = response_report.text
+        df = process_direct_tg(csv_direct)
+        tg_message = make_messages(df, login)
+        return tg_message
+
+    elif response_report.status_code == 201 or response_report.status_code == 202:
+        time.sleep(20)
+        get_report_tg(token, dashboard_id, goals, tg_id, login)
+    else:
+        logger.error(
+            f"Error while connecting to Yandex.Direct {login}. Response {response_report.status_code}. "
+            f"{response_report.text}"
+        )

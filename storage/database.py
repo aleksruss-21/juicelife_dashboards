@@ -46,6 +46,20 @@ def get_active_users() -> list[tuple[int, str, int]]:
     return active_users
 
 
+def get_users_tg() -> list[tuple[int, int, str, str, int]]:
+    """Get from database users to send Data from Yandex.Direct to telegram bot"""
+    conn = psycopg2.connect(
+        dbname=config.database.dbname,
+        user=config.database.user,
+        password=config.database.password,
+        host=config.database.host,
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM dashboards")
+    active_users = [(row[0], row[1], row[2], row[4], row[5]) for row in cursor.fetchall()]
+    return active_users
+
+
 async def add_user_tg(message: Message) -> None:
     """Add to database new user of Telegram Bot"""
 
