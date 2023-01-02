@@ -60,7 +60,7 @@ def get_users_tg() -> list[tuple[int, int, str, str, int]]:
     return active_users
 
 
-async def add_user_tg(message: Message) -> None:
+async def add_user_tg(message: Message) -> bool:
     """Add to database new user of Telegram Bot"""
 
     query = (
@@ -73,6 +73,9 @@ async def add_user_tg(message: Message) -> None:
             await cur.execute(f"SELECT * FROM tg_users WHERE telegram_id = {message.chat.id}")
             if await cur.fetchone() is None:
                 await cur.execute(query)
+                return True
+            else:
+                return False
 
 
 async def add_token_direct(telegram_id: int, token: str, login_direct: str) -> None:

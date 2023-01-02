@@ -1,4 +1,4 @@
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, executor, types
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
@@ -15,16 +15,15 @@ from storage.database import (
 )
 from service.yandex_queries import URL_OAUTH, verify_direct, get_login_direct
 
-tg_token = cfg.config.telegram.tg_token
-tg_nots_token = cfg.config.telegram.tg_nots_token
-bot = Bot(tg_token)
-aleks_bot = Bot(tg_nots_token)
-storage = MemoryStorage()
-dp = Dispatcher(bot, storage=storage)
-
 
 def run_telegram():
     """Run telegram instance"""
+    tg_token = cfg.config.telegram.tg_token
+    tg_nots_token = cfg.config.telegram.tg_nots_token
+    bot = Bot(tg_token)
+    aleks_bot = Bot(tg_nots_token)
+    storage = MemoryStorage()
+    dp = Dispatcher(bot, storage=storage)
 
     class Form(StatesGroup):
         get_token = State()
@@ -37,24 +36,23 @@ def run_telegram():
     @dp.message_handler(commands=["start"])
     async def send_welcome(message: Message) -> None:
         """Welcome message after /start commands"""
-        await add_user_tg(message)
+        if await add_user_tg(message) is True:
+            await aleks_bot.send_message(
+                90785234,
+                f"""
+    <b>Juice.Direct | Новый подписчик!</b>
+    
+    id: {message.chat.id}
+    username: @{message.chat.username}
+    Имя: {message.chat.first_name}
+    Фамилия: {message.chat.last_name}""",
+                parse_mode="HTML",
+            )
 
-        await aleks_bot.send_message(
-            90785234,
-            f"""
-<b>Juice.Direct | Новый подписчик!</b>
-
-id: {message.chat.id}
-username: @{message.chat.username}
-Имя: {message.chat.first_name}
-Фамилия: {message.chat.last_name}""",
-            parse_mode="HTML",
-        )
-
-        await bot.send_message(
-            message.chat.id,
-            "Бот-помощник по рекламе в Яндекс.Директ. Используй /add_account, чтобы авторизовать аккаунт Яндекс.Директ",
-        )
+        await bot.send_photo(message.chat.id, open("./files/telegram_welcome.png", "rb"),
+                             caption="Бот-помощник по рекламе в Яндекс.Директ. Используй /add_account, "
+                                     "чтобы авторизовать аккаунт Яндекс.Директ")
+ 
 
     @dp.message_handler(commands=["add_account"])
     async def account(message: Message) -> None:
@@ -198,9 +196,15 @@ login: {login}""",
         await verified_accounts(call.message)
         await state.finish()
 
+    executor.start_polling(dispatcher=dp)
+
 
 async def telegram_daily(mg: tuple, tg_id: int) -> None:
     """Send telegram daily"""
+    tg_token = cfg.config.telegram.tg_token
+    tg_nots_token = cfg.config.telegram.tg_nots_token
+    bot = Bot(tg_token)
+    aleks_bot = Bot(tg_nots_token)
     for message in mg:
         await bot.send_message(tg_id, message, parse_mode="HTML")
     await aleks_bot.send_message(

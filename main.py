@@ -22,10 +22,11 @@ def send_report_telegram() -> None:
         mg = get_report_tg(token, dashboard_id, goal, tg_id, login)
         asyncio.run(telegram_daily(mg, tg_id))
 
+run_telegram()
 
-if __name__ == "__main__":
-    scheduler = BackgroundScheduler(timezone="Europe/Moscow")
-    job = scheduler.add_job(run_daily_upload, "cron", hour=2, minute=10)
-    tg_daily_job = scheduler.add_job(send_report_telegram, "cron", hour=9, minute=2)
-    scheduler.start()
-    run_telegram()
+# if __name__ == "__main__":
+#     scheduler = BackgroundScheduler(timezone="Europe/Moscow")
+#     job = scheduler.add_job(run_daily_upload, "cron", hour=2, minute=10)
+#     tg_daily_job = scheduler.add_job(send_report_telegram, "cron", hour=9, minute=2)
+#     scheduler.start()
+#     run_telegram()
