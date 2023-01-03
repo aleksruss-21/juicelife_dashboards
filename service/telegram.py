@@ -41,7 +41,7 @@ def run_telegram():
                 90785234,
                 f"""
     <b>Juice.Direct | Новый подписчик!</b>
-    
+
     id: {message.chat.id}
     username: @{message.chat.username}
     Имя: {message.chat.first_name}
@@ -49,10 +49,12 @@ def run_telegram():
                 parse_mode="HTML",
             )
 
-        await bot.send_photo(message.chat.id, open("./files/telegram_welcome.png", "rb"),
-                             caption="Бот-помощник по рекламе в Яндекс.Директ. Используй /add_account, "
-                                     "чтобы авторизовать аккаунт Яндекс.Директ")
- 
+        await bot.send_photo(
+            message.chat.id,
+            open("./files/telegram_welcome.png", "rb"),
+            caption="Бот-помощник по рекламе в Яндекс.Директ. Используй /add_account, "
+            "чтобы авторизовать аккаунт Яндекс.Директ",
+        )
 
     @dp.message_handler(commands=["add_account"])
     async def account(message: Message) -> None:

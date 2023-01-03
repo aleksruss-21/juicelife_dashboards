@@ -50,7 +50,9 @@ def process_direct(report: str, dashboard_id: int) -> None:
     database.upload_direct_from_pandas(df, dashboard_id, conn)
 
 
-def process_direct_tg(report: str) -> pandas.DataFrame:
+def process_direct_tg(report: str) -> pandas.DataFrame | None:
+    if report.split("\n")[1:][0] == "":
+        return None
     df = pandas.DataFrame(
         [x.split("\t") for x in report.split("\n")[1:]],
         columns=[
@@ -75,7 +77,6 @@ def make_messages(data: pandas.DataFrame, login: str) -> tuple[str, str, str]:
     data = data.dropna(subset=["campaign_name"]).copy()
     data["cost"] = data["cost"].astype("float")
     data[["impressions", "clicks", "conversions"]] = data[["impressions", "clicks", "conversions"]].astype("int")
-
     # First Message
     yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
     message_overall = (

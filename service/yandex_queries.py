@@ -1,5 +1,6 @@
 from datetime import date
 import requests
+import time
 
 URL_DIRECT_ADS = "https://api.direct.yandex.com/json/v5/ads"
 URL_DIRECT_REPORTS = "https://api.direct.yandex.com/json/v5/reports"
@@ -83,7 +84,7 @@ def get_daily_data_request_tg(token: str, dashboard_id: int, goals: int) -> requ
                 "Cost",
                 "Conversions",
             ],
-            "ReportName": f"Report_for_tg_{date.today()}_{dashboard_id}",
+            "ReportName": f"Report_for_tg23_{date.today()}_{dashboard_id}",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "YESTERDAY",
             "Format": "TSV",
@@ -92,6 +93,12 @@ def get_daily_data_request_tg(token: str, dashboard_id: int, goals: int) -> requ
     }
 
     response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
+
+    if response_report.status_code == 201 or response_report.status_code == 202:
+        while not response_report.status_code == 200:
+            time.sleep(20)
+            response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
+
     return response_report
 
 
