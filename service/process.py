@@ -87,7 +87,7 @@ def make_messages(data: pandas.DataFrame, login: str) -> tuple[str, str, str]:
         f"          Конверсий: {data['conversions'].sum()}\n"
     )
     if data["conversions"].sum() > 0:
-        message_overall += f"          CPL: {round(data['cost'].sum() / data['conversions'].sum(), 2)}\n"
+        message_overall += f"          CPL: {round(data['cost'].sum() / data['conversions'].sum(), 2) } ₽\n"
     # Second Message
     data_campaigns = data.groupby("campaign_name").sum().sort_values(by="cost", ascending=False)
 

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import date
 import requests
 import time
@@ -60,7 +61,7 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int) -> request
     return response_report
 
 
-def get_daily_data_request_tg(token: str, dashboard_id: int, goals: int) -> requests.Response:
+def get_daily_data_request_tg(token: str, goals: int) -> requests.Response:
     """Request to Yandex.Direct API to get daily data for telegram bot"""
     direct_headers = {
         "Authorization": f"Bearer {token}",
@@ -84,7 +85,7 @@ def get_daily_data_request_tg(token: str, dashboard_id: int, goals: int) -> requ
                 "Cost",
                 "Conversions",
             ],
-            "ReportName": f"Report_for_tg23_{date.today()}_{dashboard_id}",
+            "ReportName": f"Report_for_tg_{date.today()}",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "YESTERDAY",
             "Format": "TSV",
@@ -158,4 +159,8 @@ async def get_arr_campaigns(token: str) -> requests.Response:
     }
 
     resp = requests.post(URL_DIRECT_REPORTS, json=direct_params, headers=direct_headers)
+    if resp.status_code == 201 or resp.status_code == 202:
+        while not resp.status_code == 200:
+            await asyncio.sleep(5)
+            resp = requests.post(URL_DIRECT_REPORTS, json=direct_params, headers=direct_headers)
     return resp

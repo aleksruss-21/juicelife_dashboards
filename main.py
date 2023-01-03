@@ -2,7 +2,7 @@ from service.yandex import get_report, get_report_tg
 from storage.database import get_active_users, get_users_tg
 from apscheduler.schedulers.background import BackgroundScheduler
 from loguru import logger
-from service.telegram import run_telegram, telegram_daily
+from service.telegram.telegram import run_telegram, telegram_daily
 import asyncio
 
 
@@ -19,7 +19,7 @@ def send_report_telegram() -> None:
     logger.info("Preparing to send report to telegram")
     users = get_users_tg()
     for dashboard_id, tg_id, token, login, goal in users:
-        mg = get_report_tg(token, dashboard_id, goal, login)
+        mg = get_report_tg(token, goal, login)
         asyncio.run(telegram_daily(mg, tg_id))
 
 
