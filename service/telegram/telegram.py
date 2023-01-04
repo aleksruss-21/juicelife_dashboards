@@ -46,20 +46,23 @@ def run_telegram():
         daily_btn = types.InlineKeyboardButton("📅 Ежедневная сводка", callback_data="daily")
         dashboard_btn = types.InlineKeyboardButton("📈 Дашборд", callback_data="dashboard")
         auth_btn = types.InlineKeyboardButton("⚙️ Авторизованные аккаунты", callback_data="settings")
+        support_btn = types.InlineKeyboardButton(text="🧔🏽 Остались вопросы?", url="t.me/aleksruss")
         markup = types.InlineKeyboardMarkup()
         markup.add(daily_btn, dashboard_btn)
         markup.row(auth_btn)
+        markup.add(support_btn)
 
-        await bot.send_photo(
-            message.chat.id,
-            open("./files/telegram_welcome.png", "rb"),
-            caption=telegram_messages.welcome_message(message.chat.first_name),
-            parse_mode="HTML",
-            reply_markup=markup,
-        )
+        with open("files/telegram_dashboard.png", "rb") as file:
+            await bot.send_photo(
+                message.chat.id,
+                file,
+                caption=telegram_messages.welcome_message(message.chat.first_name),
+                parse_mode="HTML",
+                reply_markup=markup,
+            )
 
     @dp.callback_query_handler(lambda call: call.data == "daily")
-    async def callback_daily(call: types.CallbackQuery, state: FSMContext) -> None:
+    async def callback_daily(call: types.CallbackQuery) -> None:
         await bot.answer_callback_query(call.id)
 
         auth_btn = types.InlineKeyboardButton(text="⚙️ Авторизовать аккаунт", callback_data="oauth")
@@ -74,8 +77,56 @@ def run_telegram():
             reply_markup=markup,
         )
 
+    @dp.callback_query_handler(lambda call: call.data == "dashboard")
+    async def callback_dashboard(call: types.CallbackQuery) -> None:
+        await bot.answer_callback_query(call.id)
+        with open("files/telegram_dashboard.png", "rb") as file:
+            await call.message.edit_media(types.InputMedia(type="photo", media=file))
+
+        template_btn = types.InlineKeyboardButton(
+            text="📊 Пример дашборда",
+            url="https://datastudio.google.com/reporting/f4f258cd-9920-4d5b-9594-435c99ca7c8c/page/VHb6C",
+        )
+        tariff_btn = types.InlineKeyboardButton(text="📝 Тарифы", callback_data="dashboard_tariffs")
+        promo_btn = types.InlineKeyboardButton(text="🎁 Попробовать 7 дней", callback_data="dashboard_promo")
+        markup = types.InlineKeyboardMarkup().row(template_btn, tariff_btn)
+        markup.add(promo_btn)
+
+        await call.message.edit_caption(telegram_messages.dashboard_welcome, parse_mode="HTML", reply_markup=markup)
+
+    @dp.callback_query_handler(lambda call: call.data == "dashboard_tariffs")
+    async def dashboard_send_tariffs(call: types.CallbackQuery) -> None:
+        await bot.answer_callback_query(call.id)
+        with open("files/telegram_prices.png", "rb") as file:
+            await call.message.edit_media(types.InputMedia(type="photo", media=file))
+
+        main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
+        promo_btn = types.InlineKeyboardButton(text="🎁 Попробовать 7 дней", callback_data="dashboard_promo")
+        markup = types.InlineKeyboardMarkup().add(main_btn, promo_btn)
+
+        await call.message.edit_caption(telegram_messages.dashboard_tariffs, parse_mode="HTML", reply_markup=markup)
+
+    @dp.callback_query_handler(lambda call: call.data == "dashboard_promo")
+    async def dashboard_promo(call: types.CallbackQuery) -> None:
+        await bot.answer_callback_query(call.id)
+        with open("files/telegram_dashboard.png", "rb") as file:
+            await call.message.edit_media(types.InputMedia(type="photo", media=file))
+
+        auth_btn = types.InlineKeyboardButton(text="⚙️ Авторизовать аккаунт", callback_data="oauth")
+        main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
+        support_btn = types.InlineKeyboardButton(text="🧔🏽 Попробовать", url="t.me/aleksruss")
+        markup = types.InlineKeyboardMarkup().row(auth_btn, main_btn)
+        markup.add(support_btn)
+        await call.message.edit_caption(telegram_messages.dashboard_promo, parse_mode="HTML", reply_markup=markup)
+
+    @dp.callback_query_handler(lambda call: call.data == "main")
+    async def main_menu(call: types.CallbackQuery) -> None:
+        await bot.answer_callback_query(call.id)
+        await bot.delete_message(call.message.chat.id, call.message.message_id)
+        await send_welcome(call.message)
+
     @dp.callback_query_handler(lambda call: call.data == "oauth")
-    async def account(call: types.CallbackQuery, state: FSMContext) -> None:
+    async def account(call: types.CallbackQuery) -> None:
         """Add account to database /add_account"""
         await bot.answer_callback_query(call.id)
 
@@ -83,7 +134,11 @@ def run_telegram():
         markup_login = types.InlineKeyboardMarkup().add(btn_login)
 
         await bot.edit_message_caption(
-            call.message.chat.id, call.message.message_id, caption=telegram_messages.auth_msg, reply_markup=markup_login
+            call.message.chat.id,
+            call.message.message_id,
+            caption=telegram_messages.auth_msg,
+            parse_mode="HTML",
+            reply_markup=markup_login,
         )
         await Form.get_token.set()
 
@@ -159,8 +214,16 @@ def run_telegram():
                 login = data["login"]
                 await state.finish()
                 await add_goal_id_direct(message.chat.id, message.text, login)
+
+                yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
+                btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
+                markup = types.InlineKeyboardMarkup().add(btn)
+
                 await bot.send_message(
-                    message.chat.id, telegram_messages.goals_success(message.text, login), parse_mode="HTML"
+                    message.chat.id,
+                    telegram_messages.goals_success(message.text, login),
+                    parse_mode="HTML",
+                    reply_markup=markup,
                 )
 
     @dp.message_handler(state=Form.get_goal_id)
@@ -190,17 +253,22 @@ def run_telegram():
                 await bot.send_message(message.chat.id, "️️⚠️ Не существует такой цели.")
                 await set_goals(message, token, state)
 
-    @dp.message_handler(commands=["accounts"])
-    async def verified_accounts(message: Message) -> None:
+    @dp.callback_query_handler(lambda call: call.data == "settings")
+    async def verified_accounts(call: types.CallbackQuery, state: FSMContext) -> None:
         """Send accounts of user with inline buttons"""
         markup_logins = types.InlineKeyboardMarkup()
-        for login in await get_users_accounts(message):
+        for login in await get_users_accounts(call.message):
             btn = types.InlineKeyboardButton(login[0], callback_data=f"acc_info|{login[0]}")
             markup_logins.add(btn)
 
-        await bot.send_message(
-            message.chat.id,
-            "Список авторизованных аккаунтов в Яндекс.Директ. Кликните, чтобы удалить аккаунт:",
+        auth_btn = types.InlineKeyboardButton(text="➕ Добавить аккаунт", callback_data="oauth")
+        markup_logins.add(auth_btn)
+
+        await bot.edit_message_caption(
+            call.message.chat.id,
+            call.message.message_id,
+            caption=telegram_messages.settings_list_accounts,
+            parse_mode="HTML",
             reply_markup=markup_logins,
         )
 
@@ -215,18 +283,20 @@ def run_telegram():
         btn_no = types.InlineKeyboardButton("Отмена", callback_data="back_main")
         markup.row(btn_yes, btn_no)
 
-        await call.message.answer(f"Вы уверены, что хотите удалить доступы к аккаунту {login}?", reply_markup=markup)
+        await call.message.edit_caption(
+            telegram_messages.settings_delete_acc(login), parse_mode="HTML", reply_markup=markup
+        )
         await state.finish()
 
     @dp.callback_query_handler(lambda call: call.data.startswith("delete"))
     async def delete_acc(call: types.CallbackQuery, state: FSMContext) -> None:
         """Delete token for direct account from database"""
-        await bot.answer_callback_query(call.id)
         login = call.data.split("|")[1]
         user_id = call.message.chat.id
         await delete_dashboard_token(user_id, login)
+        await bot.answer_callback_query(call.id, text="Успешно удалено!")
         await state.finish()
-        await bot.send_message(user_id, "Успешно удалено!")
+        await verified_accounts(call, state)
 
     @dp.callback_query_handler(lambda call: call.data == "back_main")
     async def callback_back_main(call: types.CallbackQuery, state: FSMContext) -> None:
@@ -237,13 +307,13 @@ def run_telegram():
 
     @dp.callback_query_handler(lambda call: call.data == "overview")
     async def callback_overview(call: types.CallbackQuery, state: FSMContext) -> None:
-        await bot.answer_callback_query(call.id)
         async with state.proxy() as data:
             login = data["login"]
             token = data["token"]
             goal = data["get_goal_id"]
             await state.finish()
         mg = service.yandex.get_report_tg(token, goal, login)
+        await bot.answer_callback_query(call.id)
         await telegram_daily(mg, call.message.chat.id)
 
     executor.start_polling(dispatcher=dp)
