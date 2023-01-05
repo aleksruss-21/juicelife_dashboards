@@ -2,6 +2,7 @@ import asyncio
 from datetime import date
 import requests
 import time
+from loguru import logger
 
 URL_DIRECT_ADS = "https://api.direct.yandex.com/json/v5/ads"
 URL_DIRECT_REPORTS = "https://api.direct.yandex.com/json/v5/reports"
@@ -74,7 +75,7 @@ def get_daily_data_request_tg(token: str, goals: int) -> requests.Response:
     direct_params = {
         "params": {
             "SelectionCriteria": {},
-            "Goals": [goals],
+            "Goals": ["888888"],
             "AttributionModels": ["LSC"],
             "FieldNames": [
                 "Date",
@@ -85,7 +86,7 @@ def get_daily_data_request_tg(token: str, goals: int) -> requests.Response:
                 "Cost",
                 "Conversions",
             ],
-            "ReportName": f"Report_for_tg_{date.today()}",
+            "ReportName": f"Report_kkjmmnnmmk_{date.today()}",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "YESTERDAY",
             "Format": "TSV",
@@ -125,8 +126,13 @@ async def get_login_direct(token: str) -> str:
             "FieldNames": ["Login"],
         },
     }
-    response_report = requests.post(url=URL_DIRECT_CLIENTS, json=direct_params, headers=direct_headers).json()
-    return response_report["result"]["Clients"][0]["Login"]
+    response_report = requests.post(url=URL_DIRECT_CLIENTS, json=direct_params, headers=direct_headers)
+    try:
+        login = response_report.json()["result"]["Clients"][0]["Login"]
+        return login
+    except KeyError:
+        logger.error(f"Error getting login. {response_report.text}")
+        return "Error"
 
 
 async def get_arr_goals(token: str, campaign: str) -> requests.Response:

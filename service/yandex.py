@@ -66,3 +66,4 @@ def get_report_tg(token: str, goals: int, login: str) -> tuple[str, str, str] | 
             f"Error while connecting to Yandex.Direct {login}. Response {response_report.status_code}. "
             f"{response_report.text}"
         )
+        return ["Error"]

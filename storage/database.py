@@ -91,7 +91,7 @@ async def add_token_direct(telegram_id: int, token: str, login_direct: str) -> N
                     count_dashboards = await cur.fetchone()
                 query = (
                     f"INSERT INTO dashboards (dashboard_id, user_id, token, active, login) "
-                    f"VALUES ('{count_dashboards[0] + 1}', '{telegram_id}', 'Bearer {token}', '0', '{login_direct}')"
+                    f"VALUES ('{count_dashboards[0] + 1}', '{telegram_id}', '{token}', '0', '{login_direct}')"
                 )
                 await cur.execute(query)
             else:
@@ -115,7 +115,7 @@ async def add_goal_id_direct(telegram_id: int, goal_id: str, login_direct: str) 
 async def get_users_accounts(message: Message) -> list:
     """Get user's accounts from Direct"""
 
-    query = f"SELECT login FROM dashboards WHERE user_id = {message.chat.id}"
+    query = f"SELECT login FROM dashboards WHERE user_id = {message.chat.id} AND token IS NOT NULL"
 
     async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
@@ -127,10 +127,7 @@ async def get_users_accounts(message: Message) -> list:
 async def delete_dashboard_token(telegram_id: int, login: str) -> None:
     """Delete user's accounts from Direct"""
 
-    query = (
-        f"UPDATE dashboards SET user_id = NULL, token = NULL, active = '0' WHERE user_id = {telegram_id}"
-        f" AND login = '{login}'"
-    )
+    query = f"UPDATE dashboards SET token = NULL, active = '0' WHERE user_id = {telegram_id}" f" AND login = '{login}'"
 
     async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:

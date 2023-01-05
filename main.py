@@ -20,7 +20,10 @@ def send_report_telegram() -> None:
     users = get_users_tg()
     for dashboard_id, tg_id, token, login, goal in users:
         mg = get_report_tg(token, goal, login)
-        asyncio.run(telegram_daily(mg, tg_id))
+        if mg[0] == "Error":
+            continue
+        else:
+            asyncio.run(telegram_daily(mg, tg_id))
 
 
 if __name__ == "__main__":

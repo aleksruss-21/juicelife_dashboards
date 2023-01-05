@@ -46,13 +46,13 @@ def run_telegram():
         daily_btn = types.InlineKeyboardButton("📅 Ежедневная сводка", callback_data="daily")
         dashboard_btn = types.InlineKeyboardButton("📈 Дашборд", callback_data="dashboard")
         auth_btn = types.InlineKeyboardButton("⚙️ Авторизованные аккаунты", callback_data="settings")
-        support_btn = types.InlineKeyboardButton(text="🧔🏽 Остались вопросы?", url="t.me/aleksruss")
+        support_btn = types.InlineKeyboardButton("🧔🏽 Остались вопросы?", url="t.me/aleksruss")
         markup = types.InlineKeyboardMarkup()
         markup.add(daily_btn, dashboard_btn)
         markup.row(auth_btn)
         markup.add(support_btn)
 
-        with open("files/telegram_dashboard.png", "rb") as file:
+        with open("files/telegram_welcome.png", "rb") as file:
             await bot.send_photo(
                 message.chat.id,
                 file,
@@ -62,7 +62,7 @@ def run_telegram():
             )
 
     @dp.callback_query_handler(lambda call: call.data == "daily")
-    async def callback_daily(call: types.CallbackQuery) -> None:
+    async def callback_daily(call: types.CallbackQuery, state: FSMContext) -> None:
         await bot.answer_callback_query(call.id)
 
         auth_btn = types.InlineKeyboardButton(text="⚙️ Авторизовать аккаунт", callback_data="oauth")
@@ -78,7 +78,7 @@ def run_telegram():
         )
 
     @dp.callback_query_handler(lambda call: call.data == "dashboard")
-    async def callback_dashboard(call: types.CallbackQuery) -> None:
+    async def callback_dashboard(call: types.CallbackQuery, state: FSMContext) -> None:
         await bot.answer_callback_query(call.id)
         with open("files/telegram_dashboard.png", "rb") as file:
             await call.message.edit_media(types.InputMedia(type="photo", media=file))
@@ -95,7 +95,7 @@ def run_telegram():
         await call.message.edit_caption(telegram_messages.dashboard_welcome, parse_mode="HTML", reply_markup=markup)
 
     @dp.callback_query_handler(lambda call: call.data == "dashboard_tariffs")
-    async def dashboard_send_tariffs(call: types.CallbackQuery) -> None:
+    async def dashboard_send_tariffs(call: types.CallbackQuery, state: FSMContext) -> None:
         await bot.answer_callback_query(call.id)
         with open("files/telegram_prices.png", "rb") as file:
             await call.message.edit_media(types.InputMedia(type="photo", media=file))
@@ -107,7 +107,7 @@ def run_telegram():
         await call.message.edit_caption(telegram_messages.dashboard_tariffs, parse_mode="HTML", reply_markup=markup)
 
     @dp.callback_query_handler(lambda call: call.data == "dashboard_promo")
-    async def dashboard_promo(call: types.CallbackQuery) -> None:
+    async def dashboard_promo(call: types.CallbackQuery, state: FSMContext) -> None:
         await bot.answer_callback_query(call.id)
         with open("files/telegram_dashboard.png", "rb") as file:
             await call.message.edit_media(types.InputMedia(type="photo", media=file))
@@ -120,13 +120,13 @@ def run_telegram():
         await call.message.edit_caption(telegram_messages.dashboard_promo, parse_mode="HTML", reply_markup=markup)
 
     @dp.callback_query_handler(lambda call: call.data == "main")
-    async def main_menu(call: types.CallbackQuery) -> None:
+    async def main_menu(call: types.CallbackQuery, state: FSMContext) -> None:
         await bot.answer_callback_query(call.id)
         await bot.delete_message(call.message.chat.id, call.message.message_id)
         await send_welcome(call.message)
 
     @dp.callback_query_handler(lambda call: call.data == "oauth")
-    async def account(call: types.CallbackQuery) -> None:
+    async def account(call: types.CallbackQuery, state: FSMContext) -> None:
         """Add account to database /add_account"""
         await bot.answer_callback_query(call.id)
 
@@ -151,17 +151,24 @@ def run_telegram():
         token = await verify_direct(message.text)
         if token:
             login = await get_login_direct(token)
-            async with state.proxy() as data:
-                data["login"] = login
-                data["token"] = token
-                await state.finish()
-            await add_token_direct(message.chat.id, token, login)
-            await bot.send_message(
-                message.chat.id, f"☑️ Аккаунт <b>{login}</b> успешно авторизован!", parse_mode="HTML"
-            )
+            if login == "Error":
+                main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
+                markup = types.InlineKeyboardMarkup().add(main_btn)
+                await bot.send_message(message.chat.id, "⚠️ Произошла непредвиденная ошибка️", reply_markup=markup)
+            else:
+                async with state.proxy() as data:
+                    data["login"] = login
+                    data["token"] = token
+                    await state.finish()
+                await add_token_direct(message.chat.id, token, login)
+                await bot.send_message(
+                    message.chat.id, f"☑️ Аккаунт <b>{login}</b> успешно авторизован!", parse_mode="HTML"
+                )
 
-            await aleks_bot.send_message(90785234, telegram_messages.send_nots_token(message, login), parse_mode="HTML")
-            await set_goals(message, token, state)
+                await aleks_bot.send_message(
+                    90785234, telegram_messages.send_nots_token(message, login), parse_mode="HTML"
+                )
+                await set_goals(message, token, state)
         else:
             await bot.send_message(message.chat.id, "Введен неверный код. Попробуйте добавить аккаунт снова /start.")
 
@@ -262,7 +269,8 @@ def run_telegram():
             markup_logins.add(btn)
 
         auth_btn = types.InlineKeyboardButton(text="➕ Добавить аккаунт", callback_data="oauth")
-        markup_logins.add(auth_btn)
+        main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
+        markup_logins.add(auth_btn, main_btn)
 
         await bot.edit_message_caption(
             call.message.chat.id,
@@ -302,18 +310,18 @@ def run_telegram():
     async def callback_back_main(call: types.CallbackQuery, state: FSMContext) -> None:
         """Callback to cancel delete account"""
         await bot.answer_callback_query(call.id)
-        await verified_accounts(call.message)
+        await verified_accounts(call, state)
         await state.finish()
 
     @dp.callback_query_handler(lambda call: call.data == "overview")
     async def callback_overview(call: types.CallbackQuery, state: FSMContext) -> None:
+        await bot.answer_callback_query(call.id)
+        await bot.send_message(call.message.chat.id, "<i>🤖 Загружаю данные...</i>", parse_mode="HTML")
         async with state.proxy() as data:
-            login = data["login"]
             token = data["token"]
             goal = data["get_goal_id"]
-            await state.finish()
+            login = data["login"]
         mg = service.yandex.get_report_tg(token, goal, login)
-        await bot.answer_callback_query(call.id)
         await telegram_daily(mg, call.message.chat.id)
 
     executor.start_polling(dispatcher=dp)
