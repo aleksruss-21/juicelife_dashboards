@@ -75,7 +75,7 @@ def get_daily_data_request_tg(token: str, goals: int) -> requests.Response:
     direct_params = {
         "params": {
             "SelectionCriteria": {},
-            "Goals": goals,
+            "Goals": [goals],
             "AttributionModels": ["LSC"],
             "FieldNames": [
                 "Date",
