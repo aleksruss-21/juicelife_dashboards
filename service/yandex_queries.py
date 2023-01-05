@@ -75,7 +75,7 @@ def get_daily_data_request_tg(token: str, goals: int) -> requests.Response:
     direct_params = {
         "params": {
             "SelectionCriteria": {},
-            "Goals": ["888888"],
+            "Goals": goals,
             "AttributionModels": ["LSC"],
             "FieldNames": [
                 "Date",
@@ -86,7 +86,7 @@ def get_daily_data_request_tg(token: str, goals: int) -> requests.Response:
                 "Cost",
                 "Conversions",
             ],
-            "ReportName": f"Report_kkjmmnnmmk_{date.today()}",
+            "ReportName": f"Report_telegram_{date.today()}",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "YESTERDAY",
             "Format": "TSV",
