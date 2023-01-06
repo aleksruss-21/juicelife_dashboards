@@ -32,6 +32,14 @@ def delete_from_report(date: str, dashboard_id: int, conn: sqlalchemy.future.Eng
     conn.execute(f"DELETE from dashboard_{dashboard_id} WHERE date = '{date}'")
 
 
+def check_exists_dash(dashboard_id: int, cur: sqlalchemy.future.Engine) -> bool:
+    """Check if exists table"""
+    query = f"SELECT EXISTS (SELECT FROM pg_tables WHERE pg_tables.schemaname = 'public' " \
+            f"AND tablename = 'dashboard_{dashboard_id}')"
+    result = cur.execute(query).fetchone()[0]
+    return result
+
+
 def get_active_users() -> list[tuple[int, str, int]]:
     """Get from database active users for getting Data from Yandex.Direct"""
     conn = psycopg2.connect(
@@ -126,7 +134,6 @@ async def get_users_accounts(message: Message) -> list:
 
 async def delete_dashboard_token(telegram_id: int, login: str) -> None:
     """Delete user's accounts from Direct"""
-
     query = f"UPDATE dashboards SET token = NULL, active = '0' WHERE user_id = {telegram_id}" f" AND login = '{login}'"
 
     async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:

@@ -43,9 +43,9 @@ def process_direct(report: str, dashboard_id: int) -> None:
     change_minuses(col, df)
 
     df = df.dropna(subset=["campaign_id"])
-
-    for report_date in df["date"].unique():
-        database.delete_from_report(report_date, dashboard_id, conn)
+    if database.check_exists_dash(dashboard_id, conn):
+        for report_date in df["date"].unique():
+            database.delete_from_report(report_date, dashboard_id, conn)
 
     database.upload_direct_from_pandas(df, dashboard_id, conn)
 
