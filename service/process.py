@@ -102,9 +102,12 @@ def make_messages(data: pandas.DataFrame, login: str) -> tuple[str, str, str]:
     # Third Message
     data_keywords = data.sort_values(by="cost", ascending=False)
 
-    message_keywords = "<b>Топ-25 ключевых фраз:</b>\n"
+    message_keywords = "<b>Топ-25 условий таргетинга:</b>\n"
 
     for index, row in data_keywords[:25].iterrows():
-        message_keywords += f"{row['criterion'].split('-')[0].strip()} ({row['clicks']}, {row['cost']}₽)\n"
+        keyword = row['criterion'].split('-')[0].strip()
+        if keyword == "":
+            keyword = row['criterion']
+        message_keywords += f"{keyword} ({row['clicks']}, {row['cost']}₽)\n"
 
     return message_overall, message_campaigns, message_keywords
