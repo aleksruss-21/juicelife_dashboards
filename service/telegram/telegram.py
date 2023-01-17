@@ -48,7 +48,8 @@ def run_telegram():
         auth_btn = types.InlineKeyboardButton("⚙️ Авторизованные аккаунты", callback_data="settings")
         support_btn = types.InlineKeyboardButton("🧔🏽 Остались вопросы?", url="t.me/aleksruss")
         markup = types.InlineKeyboardMarkup()
-        markup.add(daily_btn, dashboard_btn)
+        # markup.add(daily_btn, dashboard_btn)
+        markup.add(daily_btn) # delete later ^
         markup.row(auth_btn)
         markup.add(support_btn)
 

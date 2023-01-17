@@ -83,7 +83,7 @@ def make_messages(data: pandas.DataFrame, login: str) -> tuple[str, str, str]:
         f"<b>📅 {login} | Сводка за {yesterday}:\n\n</b>"
         f"<b><u>🔸 Итого:</u></b>\n          Показы: {data['impressions'].sum()}\n"
         f"          Клики: {data['clicks'].sum()}\n"
-        f"          Расходы: {data['cost'].sum()} ₽\n"
+        f"          Расходы: {round(data['cost'].sum(), 2)} ₽\n"
         f"          Конверсий: {data['conversions'].sum()}\n"
     )
     if data["conversions"].sum() > 0:
