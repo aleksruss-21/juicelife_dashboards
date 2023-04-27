@@ -1,0 +1,6 @@
+.git/
+.mypy_cache/
+.idea
+__pycache__/
+setup.cfg
+pyproject.toml

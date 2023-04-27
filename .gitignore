@@ -1,0 +1,12 @@
+sql_query.py
+.idea/
+__pycache__/
+debug.log
+postgres12/
+make.py
+.mypy_cache/
+pyproject.toml
+setup.cfg
+cfg/.env
+jl_airflow/logs
+.env
