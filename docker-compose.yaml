@@ -2,35 +2,27 @@ version: '3'
 x-airflow-common:
   &airflow-common
   build:
-      context: .
-      dockerfile: jl_airflow/Dockerfile
+    context: .
+    dockerfile: ./jl_airflow/Dockerfile
   environment:
     &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres/$POSTGRES_DB
-    AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres/$POSTGRES_DB
-    AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-    AIRFLOW__CORE__DAGS_FOLDER: "/opt/airflow/jl_airflow/dags"
-    AIRFLOW__CORE__LOGS_FOLDER: "/opt/airflow/jl_airflow/logs"
-    AIRFLOW__CORE__PLUGINS_FOLDER: "/opt/airflow/jl_airflow/plugins"
-    PYTHONPATH: "/opt/airflow/"
+    AIRFLOW__WEBSERVER__SECRET_KEY: 'albatros'
+    PYTHONPATH: "/app"
 
-  volumes:
-#    - ./jl_airflow/dags:/opt/airflow/dags
-#    - ./jl_airflow/logs:/opt/airflow/logs
-#    - ./jl_airflow/plugins:/opt/airflow/plugins
-    - ./:/opt/airflow/
+#  volumes:
+#    - ./telegram_bot:/app/telegram_bot
+#    - ./cfg:/app/cfg
+#    - ./service:/app/service
 
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
-    redis:
-        condition: service_healthy
     postgres:
         condition: service_healthy
-
 
 services:
   telegram_bot:
@@ -39,7 +31,6 @@ services:
       - "2903:2903"
     restart: always
 
-
   postgres:
     image: postgres:12
     environment:
@@ -47,7 +38,7 @@ services:
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       POSTGRES_DB: $POSTGRES_DB
     volumes:
-      - postgres-db-volume:/var/lib/postgresql/data
+      - .postgres12:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER"]
       interval: 5s
@@ -55,18 +46,6 @@ services:
     restart: always
     ports:
       - "5432:5432"
-
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 30s
-      retries: 50
-    restart: always
-
 
   airflow-webserver:
     <<: *airflow-common
@@ -81,21 +60,10 @@ services:
     restart: always
 
 
-
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
     restart: always
-
-
-
-
-  airflow-worker:
-    <<: *airflow-common
-    command: celery worker
-    restart: always
-
-
 
 
   airflow-init:
@@ -109,17 +77,6 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: $AIRFLOW_PASSWORD
 
 
-  flower:
-    <<: *airflow-common
-    command: celery flower
-    ports:
-      - "5555:5555"
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:5555/"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    restart: always
-
 volumes:
-  postgres-db-volume:
+    postgres12:
+      driver: local

@@ -21,17 +21,13 @@ def create_instance() -> sqlalchemy.future.Engine:
     return engine
 
 
-def upload_direct_from_pandas(
-    df: pandas.DataFrame, dashboard_id: int, connect: sqlalchemy.future.Engine
-) -> None:
+def upload_direct_from_pandas(df: pandas.DataFrame, dashboard_id: int, connect: sqlalchemy.future.Engine) -> None:
     """Upload report to database using pandas"""
     df.to_sql(f"dashboard_{dashboard_id}", con=connect, if_exists="append", index=False)
     logger.info(f"Successfully uploaded for dashboard_{dashboard_id}!")
 
 
-def delete_from_report(
-    date: str, dashboard_id: int, conn: sqlalchemy.future.Engine
-) -> None:
+def delete_from_report(date: str, dashboard_id: int, conn: sqlalchemy.future.Engine) -> None:
     """Delete from database income dates to upload later"""
     conn.execute(f"DELETE from dashboard_{dashboard_id} WHERE date = '{date}'")
 
@@ -70,9 +66,7 @@ def get_users_tg() -> list[tuple[int, str, str, bool, int]]:
     )
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM jl.yd_accounts")
-    active_users = [
-        (row[1], row[2], row[3], row[4], row[5]) for row in cursor.fetchall()
-    ]
+    active_users = [(row[1], row[2], row[3], row[4], row[5]) for row in cursor.fetchall()]
     return active_users
 
 
@@ -84,13 +78,9 @@ async def add_user_tg(message: Message) -> bool:
         f"('{message.chat.id}', '{message.chat.first_name}', '{message.chat.last_name}', '{message.chat.username}')"
     )
 
-    async with await psycopg.AsyncConnection.connect(
-        config.database.async_conn_query
-    ) as conn:
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
-            await cur.execute(
-                f"SELECT * FROM jl.tg_users WHERE telegram_id = {message.chat.id}"
-            )
+            await cur.execute(f"SELECT * FROM jl.tg_users WHERE telegram_id = {message.chat.id}")
             if await cur.fetchone() is None:
                 await cur.execute(query)
                 return True
@@ -98,15 +88,11 @@ async def add_user_tg(message: Message) -> bool:
                 return False
 
 
-async def add_token_direct(
-    telegram_id: int, token: str, login_direct: str, agency: bool = False
-) -> None:
+async def add_token_direct(telegram_id: int, token: str, login_direct: str, agency: bool = False) -> None:
     """Add to database new ad account"""
     lock = asyncio.Lock()
 
-    async with await psycopg.AsyncConnection.connect(
-        config.database.async_conn_query
-    ) as conn:
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 f"SELECT * FROM jl.yd_accounts WHERE telegram_id = {telegram_id} AND login = '{login_direct}'"
@@ -130,9 +116,7 @@ async def add_token_direct(
 async def add_goal_id_direct(telegram_id: int, goal_id: str, login_direct: str) -> None:
     """Add to database new ad account"""
 
-    async with await psycopg.AsyncConnection.connect(
-        config.database.async_conn_query
-    ) as conn:
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
             await cur.execute(
                 f"UPDATE jl.yd_accounts SET goal_id = '{goal_id}' WHERE telegram_id = {telegram_id}"
@@ -145,9 +129,7 @@ async def get_users_accounts(message: Message) -> list:
 
     query = f"SELECT login FROM jl.yd_accounts WHERE telegram_id = {message.chat.id} AND token IS NOT NULL"
 
-    async with await psycopg.AsyncConnection.connect(
-        config.database.async_conn_query
-    ) as conn:
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
             await cur.execute(query)
             accounts = await cur.fetchall()
@@ -156,13 +138,8 @@ async def get_users_accounts(message: Message) -> list:
 
 async def delete_dashboard_token(telegram_id: int, login: str) -> None:
     """Delete user's accounts from Direct"""
-    query = (
-        f"UPDATE jl.yd_accounts SET token = NULL WHERE telegram_id = {telegram_id}"
-        f" AND login = '{login}'"
-    )
+    query = f"UPDATE jl.yd_accounts SET token = NULL WHERE telegram_id = {telegram_id}" f" AND login = '{login}'"
 
-    async with await psycopg.AsyncConnection.connect(
-        config.database.async_conn_query
-    ) as conn:
+    async with await psycopg.AsyncConnection.connect(config.database.async_conn_query) as conn:
         async with conn.cursor() as cur:
             await cur.execute(query)

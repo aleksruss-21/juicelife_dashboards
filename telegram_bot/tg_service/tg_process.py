@@ -76,19 +76,18 @@ def process_direct_tg(report: str, goals: bool) -> pandas.DataFrame | None:
     return df
 
 
-def make_messages(
-    data: pandas.DataFrame, login: str, goals: bool
-) -> tuple[str, str, str]:
+def make_messages(data: pandas.DataFrame, login: str, goals: bool) -> list:
     """Make messages to telegram bot"""
 
     data = data.dropna(subset=["campaign_name"]).copy()
     data["cost"] = data["cost"].astype("float")
     if goals is True:
-        data[["impressions", "clicks", "conversions"]] = data[
-            ["impressions", "clicks", "conversions"]
-        ].astype("int")
+        data[["impressions", "clicks", "conversions"]] = data[["impressions", "clicks", "conversions"]].astype("int")
     else:
         data[["impressions", "clicks"]] = data[["impressions", "clicks"]].astype("int")
+
+    msg = []
+
     # First Message
     yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
     message_overall = (
@@ -102,9 +101,7 @@ def make_messages(
         if data["conversions"].sum() > 0:
             message_overall += f"          CPL: {round(data['cost'].sum() / data['conversions'].sum(), 2) } ₽\n"
     # Second Message
-    data_campaigns = (
-        data.groupby("campaign_name").sum().sort_values(by="cost", ascending=False)
-    )
+    data_campaigns = data.groupby("campaign_name").sum().sort_values(by="cost", ascending=False)
 
     message_campaigns = ""
 
@@ -113,6 +110,9 @@ def make_messages(
           Показы: {round(row['impressions'])}
           Клики: {round(row['clicks'])}
           Расходы: {round(row['cost'], 2)} ₽\n\n"""
+        if len(message_campaigns) > 2600:
+            msg.append(message_campaigns)
+            message_campaigns = ""
 
     # Third Message
     data_keywords = data.sort_values(by="cost", ascending=False)
@@ -124,5 +124,7 @@ def make_messages(
         if keyword == "":
             keyword = row["criterion"]
         message_keywords += f"{keyword} ({row['clicks']}, {row['cost']}₽)\n"
-
-    return message_overall, message_campaigns, message_keywords
+        if len(message_keywords) > 2600:
+            msg.append(message_keywords)
+            message_keywords = ""
+    return msg

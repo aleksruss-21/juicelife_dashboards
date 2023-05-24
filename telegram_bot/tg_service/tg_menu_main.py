@@ -24,18 +24,12 @@ from telegram_bot.tg_service.tg_daily import telegram_daily
 async def send_welcome(message: Message) -> None:
     """Welcome message after /start commands"""
     if await add_user_tg(message) is True:
-        await aleks_bot.send_message(
-            90785234, tg_messages.send_nots_new_user(message), parse_mode="HTML"
-        )
+        await aleks_bot.send_message(90785234, tg_messages.send_nots_new_user(message), parse_mode="HTML")
 
     daily_btn = types.InlineKeyboardButton("📅 Ежедневная сводка", callback_data="daily")
     # dashboard_btn = types.InlineKeyboardButton("📈 Дашборд", callback_data="dashboard")
-    auth_btn = types.InlineKeyboardButton(
-        "⚙️ Авторизованные аккаунты", callback_data="settings"
-    )
-    support_btn = types.InlineKeyboardButton(
-        "🧔🏽 Остались вопросы?", url="t.me/aleksruss"
-    )
+    auth_btn = types.InlineKeyboardButton("⚙️ Авторизованные аккаунты", callback_data="settings")
+    support_btn = types.InlineKeyboardButton("🧔🏽 Остались вопросы?", url="t.me/aleksruss")
     markup = types.InlineKeyboardMarkup()
     # markup.add(daily_btn, dashboard_btn)
     markup.add(daily_btn)
@@ -56,9 +50,7 @@ async def callback_daily(call: types.CallbackQuery, state: FSMContext) -> None:
     """Callback for 'Ежедневная сводка' button"""
     await bot.answer_callback_query(call.id)
 
-    auth_btn = types.InlineKeyboardButton(
-        text="⚙️ Авторизовать аккаунт", callback_data="oauth"
-    )
+    auth_btn = types.InlineKeyboardButton(text="⚙️ Авторизовать аккаунт", callback_data="oauth")
     main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
     markup = types.InlineKeyboardMarkup().row(auth_btn, main_btn)
 
@@ -105,9 +97,7 @@ async def form_verify_code_get_login(message: Message, state: FSMContext) -> Non
     if token:
         login, account_type = await get_login_direct(token)
         if login == "Error":
-            main_btn = types.InlineKeyboardButton(
-                text="📂 Главное меню", callback_data="main"
-            )
+            main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
             markup = types.InlineKeyboardMarkup().add(main_btn)
             await bot.send_message(
                 message.chat.id,
@@ -118,7 +108,10 @@ async def form_verify_code_get_login(message: Message, state: FSMContext) -> Non
             async with state.proxy() as data:
                 data["login"] = login
                 data["token"] = token
+                data["is_agency"] = False
             if account_type == "AGENCY":
+                async with state.proxy() as data:
+                    data["is_agency"] = True
                 logins = await get_agency_logins(token)
                 await logins_agency(message, logins)
             else:
@@ -130,40 +123,36 @@ async def form_verify_code_get_login(message: Message, state: FSMContext) -> Non
         )
 
 
-async def form_verify_check(
-    message: Message, state: FSMContext, agency: bool = False
-) -> None:
+async def form_verify_check(message: Message, state: FSMContext) -> None:
     async with state.proxy() as data:
         token = data["token"]
-        if agency is True:
+        is_agency = data["is_agency"]
+        if is_agency is True:
             login = data["agency_login"]
         else:
             login = data["login"]
-    await add_token_direct(message.chat.id, token, login, agency)
+    await add_token_direct(message.chat.id, token, login, is_agency)
     await bot.send_message(
         message.chat.id,
         f"☑️ Аккаунт <b>{login}</b> успешно авторизован!",
         parse_mode="HTML",
     )
 
-    await aleks_bot.send_message(
-        90785234, tg_messages.send_nots_token(message, login), parse_mode="HTML"
-    )
-    await set_goals(message, state, agency)
+    await aleks_bot.send_message(90785234, tg_messages.send_nots_token(message, login), parse_mode="HTML")
+    await set_goals(message, state)
 
 
-async def set_goals(message: Message, state: FSMContext, agency: bool = False) -> None:
+async def set_goals(message: Message, state: FSMContext) -> None:
     """Ask user to set goal id number"""
     async with state.proxy() as data:
         token = data["token"]
-        if agency is True:
+        is_agency = data["is_agency"]
+        if is_agency is True:
             login = data["agency_login"]
         else:
             login = data["login"]
     await bot.send_message(message.chat.id, tg_messages.goals_welcome)
-    await bot.send_message(
-        message.chat.id, tg_messages.goals_welcome2, parse_mode="HTML"
-    )
+    await bot.send_message(message.chat.id, tg_messages.goals_welcome2, parse_mode="HTML")
 
     goals = await arr_goals(token, login)
     if goals == "No campaigns":
@@ -172,9 +161,7 @@ async def set_goals(message: Message, state: FSMContext, agency: bool = False) -
             data["get_goal_id"] = message.text
             await state.finish()
         yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
-        btn = types.InlineKeyboardButton(
-            f"📅 Сводка за {yesterday}", callback_data="overview"
-        )
+        btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
         markup = types.InlineKeyboardMarkup().add(btn)
         await bot.send_message(
             message.chat.id,
@@ -191,9 +178,7 @@ async def set_goals(message: Message, state: FSMContext, agency: bool = False) -
             login = data["login"]
             await state.finish()
         yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
-        btn = types.InlineKeyboardButton(
-            f"📅 Сводка за {yesterday}", callback_data="overview"
-        )
+        btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
         markup = types.InlineKeyboardMarkup().add(btn)
         await bot.send_message(
             message.chat.id,
@@ -202,11 +187,9 @@ async def set_goals(message: Message, state: FSMContext, agency: bool = False) -
             reply_markup=markup,
         )
     elif goals == "No goals":
-        await bot.send_message(message.chat.id, "Нет целей")
+        await bot.send_message(message.chat.id, tg_messages.goals_empty)
         yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
-        btn = types.InlineKeyboardButton(
-            f"📅 Сводка за {yesterday}", callback_data="overview"
-        )
+        btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
         markup = types.InlineKeyboardMarkup().add(btn)
         await bot.send_message(
             message.chat.id,
@@ -229,9 +212,7 @@ async def set_goals(message: Message, state: FSMContext, agency: bool = False) -
                     disable_web_page_preview=True,
                 )
                 arr_str = ""
-        await bot.send_message(
-            message.chat.id, arr_str, parse_mode="HTML", disable_web_page_preview=True
-        )
+        await bot.send_message(message.chat.id, arr_str, parse_mode="HTML", disable_web_page_preview=True)
 
         await Form.get_goal_id.set()
 
@@ -243,20 +224,18 @@ async def form_get_goal_id(message: Message, state: FSMContext) -> None:
     else:
         async with state.proxy() as data:
             data["get_goal_id"] = message.text
-            login = data["login"]
+            is_agency = data["is_agency"]
             goals = data["goals"]
+            if is_agency is True:
+                login = data["agency_login"]
+            else:
+                login = data["login"]
         if str(message.text) in goals:
             await add_goal_id_direct(message.chat.id, message.text, login)
             async with state.proxy() as data:
                 data["get_goal_id"] = message.text
-                login = data["login"]
-                await state.finish()
-            yesterday = datetime.strftime(
-                datetime.now() - timedelta(days=1), "%d.%m.%Y"
-            )
-            btn = types.InlineKeyboardButton(
-                f"📅 Сводка за {yesterday}", callback_data="overview"
-            )
+            yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
+            btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
             markup = types.InlineKeyboardMarkup().add(btn)
             await bot.send_message(
                 message.chat.id,
@@ -274,9 +253,7 @@ async def logins_agency(message: Message, logins: list):
     markup = types.InlineKeyboardMarkup()
 
     for login in logins:
-        btn = types.InlineKeyboardButton(
-            text=login, callback_data=f"login_agency|{login}"
-        )
+        btn = types.InlineKeyboardButton(text=login, callback_data=f"login_agency|{login}")
         markup.add(btn)
 
     await bot.send_message(
@@ -292,23 +269,21 @@ async def callback_agency_logins(call: types.CallbackQuery, state: FSMContext) -
     login = call.data.split("|")[1]
     async with state.proxy() as data:
         data["agency_login"] = login
-    await form_verify_check(call.message, state, agency=True)
+    await form_verify_check(call.message, state)
 
 
 async def callback_overview(call: types.CallbackQuery, state: FSMContext) -> None:
     await bot.answer_callback_query(call.id)
-    await bot.send_message(
-        call.message.chat.id, "<i>🤖 Загружаю данные...</i>", parse_mode="HTML"
-    )
+    await bot.send_message(call.message.chat.id, "<i>🤖 Загружаю данные...</i>", parse_mode="HTML")
     async with state.proxy() as data:
         token = data["token"]
         goal = data.get("get_goal_id")
-        if data.get("agency_login") is None:
-            login = data["login"]
-            is_agency = False
-        else:
+        is_agency = data["is_agency"]
+        if is_agency is True:
             login = data["agency_login"]
-            is_agency = True
+        else:
+            login = data["login"]
+        await state.finish()
 
     mg = get_report_tg(token, goal, login, is_agency)
-    await telegram_daily(mg, call.message.chat.id)
+    await telegram_daily(mg, call.message.chat.id, login)

@@ -8,27 +8,24 @@ from loguru import logger
 import cfg
 
 URL_DIRECT_ADS = "https://api.direct.yandex.com/json/v5/ads"
+URL_DIRECT_REPORTS = "https://api.direct.yandex.com/json/v5/reports"
+URL_DIRECT_CLIENTS = "https://api.direct.yandex.com/json/v5/clients"
+GOALS_URL = "https://api.direct.yandex.ru/live/v4/json/"
+URL_AGENCY_CLIENTS = "https://api.direct.yandex.com/json/v5/agencyclients"
 # URL_DIRECT_ADS = "https://api-sandbox.direct.yandex.com/json/v5/ads"
 # URL_DIRECT_REPORTS = "https://api-sandbox.direct.yandex.com/json/v5/reports"
-URL_DIRECT_REPORTS = "https://api.direct.yandex.com/json/v5/reports"
 # URL_DIRECT_CLIENTS = "https://api-sandbox.direct.yandex.com/json/v5/clients"
-URL_DIRECT_CLIENTS = "https://api.direct.yandex.com/json/v5/clients"
+
 CLIENT_ID = cfg.config.yandex.yandex_client_id
 CLIENT_SECRET = cfg.config.yandex.yandex_client_secret
-URL_OAUTH = (
-    f"https://oauth.yandex.ru/authorize?response_type=code&client_id={CLIENT_ID}"
-)
+URL_OAUTH = f"https://oauth.yandex.ru/authorize?response_type=code&client_id={CLIENT_ID}"
 VERIFY_URL = "https://oauth.yandex.ru/token"
 
 # GOALS_URL = "https://api-sandbox.direct.yandex.com/live/v4/json"
-GOALS_URL = "https://api.direct.yandex.ru/live/v4/json/"
 # URL_AGENCY_CLIENTS = "https://api-sandbox.direct.yandex.com/json/v5/agencyclients"
-URL_AGENCY_CLIENTS = "https://api.direct.yandex.com/json/v5/agencyclients"
 
 
-def get_daily_data_request(
-    token: str, dashboard_id: int, goals: int, login: str
-) -> requests.Response:
+def get_daily_data_request(token: str, dashboard_id: int, goals: int, login: str) -> requests.Response:
     """Request to Yandex.Direct API to get daily data"""
     direct_headers = {
         "Authorization": f"Bearer {token}",
@@ -73,9 +70,7 @@ def get_daily_data_request(
         }
     }
 
-    response_report = requests.get(
-        url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params
-    )
+    response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
     return response_report
 
 
@@ -118,16 +113,12 @@ def get_daily_data_request_tg(token: str, goals: int, login: str) -> requests.Re
         direct_params["params"]["Goals"] = [goals]
         direct_params["params"]["AttributionModels"] = ["LSC"]
 
-    response_report = requests.get(
-        url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params
-    )
+    response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
 
     if response_report.status_code == 201 or response_report.status_code == 202:
         while not response_report.status_code == 200:
             time.sleep(20)
-            response_report = requests.get(
-                url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params
-            )
+            response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
     return response_report
 
 
@@ -158,9 +149,7 @@ async def get_login_direct(token: str) -> tuple[str, str]:
             "FieldNames": ["Login", "Type"],
         },
     }
-    response_report = requests.post(
-        url=URL_DIRECT_CLIENTS, json=direct_params, headers=direct_headers
-    )
+    response_report = requests.post(url=URL_DIRECT_CLIENTS, json=direct_params, headers=direct_headers)
     try:
         login = response_report.json()["result"]["Clients"][0]["Login"]
         account_type = response_report.json()["result"]["Clients"][0]["Type"]
@@ -226,7 +215,5 @@ async def query_get_arr_campaigns(token: str, login: str) -> requests.Response:
     if resp.status_code == 201 or resp.status_code == 202:
         while not resp.status_code == 200:
             await asyncio.sleep(1)
-            resp = requests.post(
-                URL_DIRECT_REPORTS, json=direct_params, headers=direct_headers
-            )
+            resp = requests.post(URL_DIRECT_REPORTS, json=direct_params, headers=direct_headers)
     return resp

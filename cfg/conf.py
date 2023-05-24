@@ -23,7 +23,8 @@ class Config:
             self.dbname = os.environ.get("POSTGRES_DB")
             self.user = os.environ.get("POSTGRES_USER")
             self.password = os.environ.get("POSTGRES_PASSWORD")
-            self.host = "postgres"
+            # self.host = "postgres"
+            self.host = "194.67.111.233"
             self.async_conn_query = f"dbname={self.dbname} user={self.user} host={self.host} password={self.password}"
 
     class Telegram:
