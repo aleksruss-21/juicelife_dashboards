@@ -11,3 +11,4 @@ cfg/.env
 #jl_airflow/logs
 .env
 .postgres12/
+jl_airflow/logs

@@ -61,18 +61,18 @@ async def get_arr_campaigns(token: str, login: str) -> str | None:
         return None
 
 
-def get_report_tg(token: str, goals: int, login: str, is_agency: bool) -> tuple[str, str, str] | list[str]:
+def get_report_tg(token: str, goals: int, login: str) -> tuple[str, str, str] | list[str]:
     """Request data from Direct"""
     response_report = get_daily_data_request_tg(token, goals, login)
     if response_report.status_code == 200:
         logger.info(f"Successfully connected to Direct {login}")
         csv_direct = response_report.text
-
         df = process_direct_tg(csv_direct, goals=False if goals is None else True)
         if df is None:
             yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
             return [f"<b>📅 {login} | Не было рекламных кампаний за {yesterday}\n\n</b>"]
         tg_message = make_messages(df, login, goals=False if goals is None else True)
+        logger.info(tg_message)
         return tg_message
     elif response_report.status_code == 400:
         if response_report.json()["error"]["error_detail"].startswith(

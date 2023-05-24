@@ -56,7 +56,7 @@ def get_active_users() -> list[tuple[int, str, int, str]]:
     return active_users
 
 
-def get_users_tg() -> list[tuple[int, str, str, bool, int]]:
+def get_users_tg() -> list[tuple[int, str, str, int]]:
     """Get from database users to send Data from Yandex.Direct to telegram bot"""
     conn = psycopg2.connect(
         dbname=config.database.dbname,
@@ -66,7 +66,7 @@ def get_users_tg() -> list[tuple[int, str, str, bool, int]]:
     )
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM jl.yd_accounts")
-    active_users = [(row[1], row[2], row[3], row[4], row[5]) for row in cursor.fetchall()]
+    active_users = [(row[1], row[2], row[3], row[5]) for row in cursor.fetchall()]
     return active_users
 
 
