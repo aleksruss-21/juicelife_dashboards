@@ -1,6 +1,6 @@
 sql_query.py
 .idea/
-__pycache__/
+**/__pycache__
 debug.log
 postgres12/
 make.py
@@ -8,5 +8,6 @@ make.py
 pyproject.toml
 setup.cfg
 cfg/.env
-jl_airflow/logs
+#jl_airflow/logs
 .env
+.postgres12/

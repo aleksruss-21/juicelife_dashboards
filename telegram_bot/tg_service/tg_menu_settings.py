@@ -9,9 +9,7 @@ from telegram_bot.tg_storage.tg_app_database import (
 from telegram_bot.tg_service import tg_messages
 
 
-async def callback_verified_accounts(
-    call: types.CallbackQuery, state: FSMContext
-) -> None:
+async def callback_verified_accounts(call: types.CallbackQuery, state: FSMContext) -> None:
     """Send accounts of user with inline buttons"""
     await bot.answer_callback_query(call.id)
     markup_logins = types.InlineKeyboardMarkup()
@@ -19,9 +17,7 @@ async def callback_verified_accounts(
         btn = types.InlineKeyboardButton(login[0], callback_data=f"acc_info|{login[0]}")
         markup_logins.add(btn)
 
-    auth_btn = types.InlineKeyboardButton(
-        text="➕ Добавить аккаунт", callback_data="oauth"
-    )
+    auth_btn = types.InlineKeyboardButton(text="➕ Добавить аккаунт", callback_data="oauth")
     main_btn = types.InlineKeyboardButton(text="📂 Главное меню", callback_data="main")
     markup_logins.add(auth_btn, main_btn)
 
@@ -44,9 +40,7 @@ async def callback_ask_delete_acc(call: types.CallbackQuery, state: FSMContext) 
     btn_no = types.InlineKeyboardButton("Отмена", callback_data="back_main")
     markup.row(btn_yes, btn_no)
 
-    await call.message.edit_caption(
-        tg_messages.settings_delete_acc(login), parse_mode="HTML", reply_markup=markup
-    )
+    await call.message.edit_caption(tg_messages.settings_delete_acc(login), parse_mode="HTML", reply_markup=markup)
     await state.finish()
 
 

@@ -19,4 +19,5 @@ class Form(StatesGroup):
     agency_login = State()
     goals = State()
     token = State()
+    is_agency = State()
     # current_goal = State()

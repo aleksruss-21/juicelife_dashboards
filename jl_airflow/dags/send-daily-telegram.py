@@ -1,5 +1,4 @@
 import asyncio
-
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 
@@ -21,17 +20,17 @@ def send_report_telegram() -> bool:
         elif mg[0] == "Error":
             continue
         else:
-            asyncio.run(telegram_daily(mg, tg_id))
+            asyncio.run(telegram_daily(mg, tg_id, login))
     return True
 
 
 with DAG(
     dag_id="send-daily-telegram",
-    schedule="2 9 * * *",
+    schedule="2 6 * * *",
     start_date=datetime.datetime(2023, 4, 23),
 ) as dag:
 
-    t1 = PythonOperator(task_id="test", python_callable=send_report_telegram)
+    t1 = PythonOperator(task_id="telegram_daily", python_callable=send_report_telegram)
     t1
     # t1 = BashOperator(
     #     task_id='echo_hi',

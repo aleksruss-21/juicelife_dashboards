@@ -39,24 +39,17 @@ async def arr_goals(token: str, login: str) -> list[dict] | str:
     response_report = await get_arr_goals(token, campaign, login)
     if response_report.status_code == 200:
         if response_report.json().get("data"):
-            goals = [
-                {"name": item["Name"], "goal_id": item["GoalID"]}
-                for item in response_report.json()["data"]
-            ]
+            goals = [{"name": item["Name"], "goal_id": item["GoalID"]} for item in response_report.json()["data"]]
             return goals
         else:
             return "No goals"
     else:
-        logger.error(
-            f"Error while getting goals. {response_report.status_code}, {response_report.text}"
-        )
+        logger.error(f"Error while getting goals. {response_report.status_code}, {response_report.text}")
 
 
 async def get_arr_campaigns(token: str, login: str) -> str | None:
     """Process tg_yandex query to get campaign ID"""
-    logger.info(login + " Это логин детка")
     resp = await query_get_arr_campaigns(token, login)
-    logger.info(resp.text)
 
     if resp.status_code == 200:
         arr = resp.text.split("\n")[1]
@@ -64,15 +57,11 @@ async def get_arr_campaigns(token: str, login: str) -> str | None:
             return "No campaigns"
         return arr
     else:
-        logger.error(
-            f"Error while getting list of campaigns to get login. {resp.status_code}, {resp.text}"
-        )
+        logger.error(f"Error while getting list of campaigns to get login. {resp.status_code}, {resp.text}")
         return None
 
 
-def get_report_tg(
-    token: str, goals: int, login: str, is_agency: bool
-) -> tuple[str, str, str] | list[str]:
+def get_report_tg(token: str, goals: int, login: str, is_agency: bool) -> tuple[str, str, str] | list[str]:
     """Request data from Direct"""
     response_report = get_daily_data_request_tg(token, goals, login)
     if response_report.status_code == 200:
@@ -81,9 +70,7 @@ def get_report_tg(
 
         df = process_direct_tg(csv_direct, goals=False if goals is None else True)
         if df is None:
-            yesterday = datetime.strftime(
-                datetime.now() - timedelta(days=1), "%d.%m.%Y"
-            )
+            yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
             return [f"<b>📅 {login} | Не было рекламных кампаний за {yesterday}\n\n</b>"]
         tg_message = make_messages(df, login, goals=False if goals is None else True)
         return tg_message

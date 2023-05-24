@@ -1,7 +1,7 @@
 from telegram_bot import bot, aleks_bot
 
 
-async def telegram_daily(mg: list, tg_id: int) -> None:
+async def telegram_daily(mg: list, tg_id: int, login: str) -> None:
     """Send telegram daily"""
     if mg[0] == "Invalid_Goal":
         await bot.send_message(
@@ -13,12 +13,13 @@ async def telegram_daily(mg: list, tg_id: int) -> None:
         await bot.send_message(tg_id, "⚠️ Произошла непредвиденная ошибка. ")
     else:
         for message in mg:
+
             await bot.send_message(tg_id, message, parse_mode="HTML")
 
     await aleks_bot.send_message(
         90785234,
         f"""
-    <b>Juice.Direct | {tg_id} отправлено!</b>""",
+    <b>Juice.Direct | {tg_id} - {login} отправлено!</b>""",
         parse_mode="HTML",
     )
     session = await bot.get_session()
