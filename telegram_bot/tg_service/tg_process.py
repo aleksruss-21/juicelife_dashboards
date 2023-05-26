@@ -100,6 +100,8 @@ def make_messages(data: pandas.DataFrame, login: str, goals: bool) -> list:
         message_overall += f"          Конверсий: {data['conversions'].sum()}\n"
         if data["conversions"].sum() > 0:
             message_overall += f"          CPL: {round(data['cost'].sum() / data['conversions'].sum(), 2) } ₽\n"
+
+    msg.append(message_overall)
     # Second Message
     data_campaigns = data.groupby("campaign_name").sum().sort_values(by="cost", ascending=False)
 
@@ -114,6 +116,8 @@ def make_messages(data: pandas.DataFrame, login: str, goals: bool) -> list:
             msg.append(message_campaigns)
             message_campaigns = ""
 
+    msg.append(message_campaigns)
+
     # Third Message
     data_keywords = data.sort_values(by="cost", ascending=False)
 
@@ -127,4 +131,6 @@ def make_messages(data: pandas.DataFrame, login: str, goals: bool) -> list:
         if len(message_keywords) > 2600:
             msg.append(message_keywords)
             message_keywords = ""
+    msg.append(message_keywords)
+
     return msg

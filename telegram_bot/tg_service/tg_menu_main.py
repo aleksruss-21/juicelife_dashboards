@@ -285,5 +285,5 @@ async def callback_overview(call: types.CallbackQuery, state: FSMContext) -> Non
             login = data["login"]
         await state.finish()
 
-    mg = get_report_tg(token, goal, login, is_agency)
+    mg = get_report_tg(token, goal, login)
     await telegram_daily(mg, call.message.chat.id, login)
