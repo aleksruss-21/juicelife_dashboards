@@ -21,7 +21,7 @@ from telegram_bot.tg_service import tg_messages
 from telegram_bot.tg_service.tg_daily import telegram_daily
 
 
-async def send_welcome(message: Message) -> None:
+async def send_welcome(message: Message, state: FSMContext) -> None:
     """Welcome message after /start commands"""
     if await add_user_tg(message) is True:
         await aleks_bot.send_message(90785234, tg_messages.send_nots_new_user(message), parse_mode="HTML")
@@ -67,7 +67,7 @@ async def callback_main_menu(call: types.CallbackQuery, state: FSMContext) -> No
     """Callback to go to main menu"""
     await bot.answer_callback_query(call.id)
     await bot.delete_message(call.message.chat.id, call.message.message_id)
-    await send_welcome(call.message)
+    await send_welcome(call.message, state)
 
 
 async def callback_add_account(call: types.CallbackQuery, state: FSMContext) -> None:
@@ -91,7 +91,6 @@ async def form_verify_code_get_login(message: Message, state: FSMContext) -> Non
     """Verify code part1."""
     async with state.proxy() as data:
         data["get_token"] = message.text
-        await state.finish()
 
     token = await verify_direct(message.text)
     if token:
@@ -159,7 +158,7 @@ async def set_goals(message: Message, state: FSMContext) -> None:
         await bot.send_message(message.chat.id, tg_messages.goals_no_campaigns)
         async with state.proxy() as data:
             data["get_goal_id"] = message.text
-            await state.finish()
+            # await state.finish()
         yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
         btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
         markup = types.InlineKeyboardMarkup().add(btn)
@@ -176,7 +175,7 @@ async def set_goals(message: Message, state: FSMContext) -> None:
         async with state.proxy() as data:
             data["get_goal_id"] = message.text
             login = data["login"]
-            await state.finish()
+            # await state.finish()
         yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
         btn = types.InlineKeyboardButton(f"📅 Сводка за {yesterday}", callback_data="overview")
         markup = types.InlineKeyboardMarkup().add(btn)
@@ -220,7 +219,7 @@ async def set_goals(message: Message, state: FSMContext) -> None:
 async def form_get_goal_id(message: Message, state: FSMContext) -> None:
     """Auto add goal"""
     if message.text == "/start":
-        await send_welcome(message)
+        await send_welcome(message, state)
     else:
         async with state.proxy() as data:
             data["get_goal_id"] = message.text

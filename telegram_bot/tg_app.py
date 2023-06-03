@@ -23,10 +23,7 @@ from telegram_bot.tg_service.tg_menu_settings import (
     callback_ask_delete_acc,
 )
 
-
-
 from aiogram import executor
-# from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 dp.register_message_handler(send_welcome, commands=["start"])
 
@@ -49,6 +46,6 @@ dp.register_callback_query_handler(callback_ask_delete_acc, lambda call: call.da
 dp.register_callback_query_handler(callback_delete_acc, lambda call: call.data.startswith("delete"))
 dp.register_callback_query_handler(callback_back_main, lambda call: call.data == "back_main")
 
-dp.register_callback_query_handler(callback_overview, lambda call: call.data == "overview")
+dp.register_callback_query_handler(callback_overview, lambda call: call.data == "overview", state='*')
 
 executor.start_polling(dispatcher=dp)
