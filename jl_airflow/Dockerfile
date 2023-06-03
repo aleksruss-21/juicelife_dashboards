@@ -17,3 +17,4 @@ COPY ./jl_airflow/plugins plugins
 COPY ./cfg cfg
 COPY ./telegram_bot telegram_bot
 COPY ./service service
+COPY ./storage storage

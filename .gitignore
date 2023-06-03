@@ -12,3 +12,6 @@ cfg/.env
 .env
 .postgres12/
 jl_airflow/logs
+jl_airflow/airflow-worker.pid
+jl_airflow/airflow.cfg
+jl_airflow/webserver_config.py
