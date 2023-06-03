@@ -24,7 +24,9 @@ from telegram_bot.tg_service.tg_menu_settings import (
 )
 
 
+
 from aiogram import executor
+# from aiogram.contrib.middlewares.logging import LoggingMiddleware
 
 dp.register_message_handler(send_welcome, commands=["start"])
 

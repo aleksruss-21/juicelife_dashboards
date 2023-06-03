@@ -8,12 +8,11 @@ import datetime
 
 def send_report_telegram(is_test: bool) -> bool:
     from loguru import logger
-    from telegram_bot.tg_storage.tg_app_database import get_users_tg
+    from storage.jl_db import get_users_tg
     from telegram_bot.tg_service.tg_menu_main import get_report_tg, telegram_daily
 
     """Send report to telegram bot"""
     logger.info("Preparing to send report to telegram")
-    logger.info(is_test)
     users = get_users_tg()
     for tg_id, login, token, goal in users:
         logger.info(tg_id)
@@ -32,6 +31,7 @@ with DAG(
     schedule="2 6 * * *",
     params = {"test_launch": Param(False, type="boolean")},
     start_date=datetime.datetime(2023, 4, 23),
+    catchup=False
 ) as dag:
 
     t1 = PythonOperator(
