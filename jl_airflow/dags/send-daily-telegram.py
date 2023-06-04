@@ -15,7 +15,6 @@ def send_report_telegram(is_test: bool) -> bool:
     logger.info("Preparing to send report to telegram")
     users = get_users_tg()
     for tg_id, login, token, goal in users:
-        logger.debug(type(is_test))
         if is_test == 'True' and tg_id != 90785234:
             continue
         mg = get_report_tg(token, goal, login)
@@ -42,4 +41,3 @@ with DAG(
         op_args=["{{params['test_launch']}}"]
         )
     t1
-

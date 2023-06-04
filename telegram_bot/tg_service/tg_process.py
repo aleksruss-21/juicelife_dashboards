@@ -1,6 +1,7 @@
 import pandas
 from telegram_bot.tg_storage import tg_app_database as database
 from datetime import datetime, timedelta
+from loguru import logger
 
 
 def change_minuses(col: list[str], df: pandas.DataFrame) -> None:
@@ -116,7 +117,8 @@ def make_messages(data: pandas.DataFrame, login: str, goals: bool) -> list:
             msg.append(message_campaigns)
             message_campaigns = ""
 
-    msg.append(message_campaigns)
+    if message_campaigns != "":
+        msg.append(message_campaigns)
 
     # Third Message
     data_keywords = data.sort_values(by="cost", ascending=False)
@@ -131,6 +133,6 @@ def make_messages(data: pandas.DataFrame, login: str, goals: bool) -> list:
         if len(message_keywords) > 2600:
             msg.append(message_keywords)
             message_keywords = ""
-    msg.append(message_keywords)
-
+    if message_keywords != "":
+        msg.append(message_keywords)
     return msg

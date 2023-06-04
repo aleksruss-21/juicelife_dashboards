@@ -13,7 +13,6 @@ async def telegram_daily(mg: list, tg_id: int, login: str) -> None:
         await bot.send_message(tg_id, "⚠️ Произошла непредвиденная ошибка. ")
     else:
         for message in mg:
-
             await bot.send_message(tg_id, message, parse_mode="HTML")
 
     await aleks_bot.send_message(
