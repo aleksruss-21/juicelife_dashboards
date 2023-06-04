@@ -7,22 +7,14 @@ x-airflow-common:
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres/$POSTGRES_DB
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://$POSTGRES_USER:$POSTGRES_PASSWORD@194.67.111.233/$POSTGRES_DB
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__WEBSERVER__SECRET_KEY: 'albatros'
     PYTHONPATH: "/app"
 
-#  volumes:
-#    - ./telegram_bot:/app/telegram_bot
-#    - ./cfg:/app/cfg
-#    - ./service:/app/service
-
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
-  depends_on:
-    postgres:
-        condition: service_healthy
 
 services:
   telegram_bot:
@@ -30,22 +22,6 @@ services:
     ports:
       - "2903:2903"
     restart: always
-
-  postgres:
-    image: postgres:12
-    environment:
-      POSTGRES_USER: $POSTGRES_USER
-      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-      POSTGRES_DB: $POSTGRES_DB
-    volumes:
-      - .postgres12:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER"]
-      interval: 5s
-      retries: 5
-    restart: always
-    ports:
-      - "5432:5432"
 
   airflow-webserver:
     <<: *airflow-common
