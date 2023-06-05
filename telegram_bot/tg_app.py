@@ -31,20 +31,20 @@ dp.register_message_handler(form_verify_code_get_login, state=Form.get_token)
 dp.register_message_handler(form_get_goal_id, state=Form.get_goal_id)
 
 
-dp.register_callback_query_handler(callback_daily, lambda call: call.data == "daily")
-dp.register_callback_query_handler(callback_dashboard, lambda call: call.data == "dashboard")
-dp.register_callback_query_handler(callback_dashboard_send_tariffs, lambda call: call.data == "dashboard_tariffs")
-dp.register_callback_query_handler(callback_dashboard_promo, lambda call: call.data == "dashboard_promo")
-dp.register_callback_query_handler(callback_main_menu, lambda call: call.data == "main")
-dp.register_callback_query_handler(callback_add_account, lambda call: call.data == "oauth")
-dp.register_callback_query_handler(callback_agency_logins, lambda call: call.data.startswith("login_agency"))
+dp.register_callback_query_handler(callback_daily, lambda call: call.data == "daily", state='*')
+dp.register_callback_query_handler(callback_dashboard, lambda call: call.data == "dashboard", state='*')
+dp.register_callback_query_handler(callback_dashboard_send_tariffs, lambda call: call.data == "dashboard_tariffs", state='*')
+dp.register_callback_query_handler(callback_dashboard_promo, lambda call: call.data == "dashboard_promo", state='*')
+dp.register_callback_query_handler(callback_main_menu, lambda call: call.data == "main", state='*')
+dp.register_callback_query_handler(callback_add_account, lambda call: call.data == "oauth", state='*')
+dp.register_callback_query_handler(callback_agency_logins, lambda call: call.data.startswith("login_agency"), state='*')
 
 
-dp.register_callback_query_handler(callback_verified_accounts, lambda call: call.data == "settings")
+dp.register_callback_query_handler(callback_verified_accounts, lambda call: call.data == "settings", state='*')
 
-dp.register_callback_query_handler(callback_ask_delete_acc, lambda call: call.data.startswith("acc_info"))
-dp.register_callback_query_handler(callback_delete_acc, lambda call: call.data.startswith("delete"))
-dp.register_callback_query_handler(callback_back_main, lambda call: call.data == "back_main")
+dp.register_callback_query_handler(callback_ask_delete_acc, lambda call: call.data.startswith("acc_info"), state='*')
+dp.register_callback_query_handler(callback_delete_acc, lambda call: call.data.startswith("delete"), state='*')
+dp.register_callback_query_handler(callback_back_main, lambda call: call.data == "back_main", state='*')
 
 dp.register_callback_query_handler(callback_overview, lambda call: call.data == "overview", state='*')
 
