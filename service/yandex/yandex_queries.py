@@ -1,5 +1,5 @@
 import asyncio
-from datetime import date
+from datetime import datetime
 
 import requests
 import time
@@ -25,7 +25,13 @@ VERIFY_URL = "https://oauth.yandex.ru/token"
 # URL_AGENCY_CLIENTS = "https://api-sandbox.direct.yandex.com/json/v5/agencyclients"
 
 
-def get_daily_data_request(token: str, dashboard_id: int, goals: int, login: str) -> requests.Response:
+def get_daily_data_request(
+        token: str,
+        goals: int,
+        login: str,
+        account_id: int,
+        date_start: str,
+        date_end: str) -> requests.Response:
     """Request to Yandex.Direct API to get daily data"""
     direct_headers = {
         "Authorization": f"Bearer {token}",
@@ -39,8 +45,6 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int, login: str
     direct_params = {
         "params": {
             "SelectionCriteria": {},
-            "Goals": [goals],
-            "AttributionModels": ["LSC"],
             "FieldNames": [
                 "Date",
                 "CampaignId",
@@ -62,13 +66,22 @@ def get_daily_data_request(token: str, dashboard_id: int, goals: int, login: str
                 "Bounces",
                 "Conversions",
             ],
-            "ReportName": f"Report_{date.today()}_{dashboard_id}",
+            "ReportName": f"Report_{account_id}__00",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "AUTO",
             "Format": "TSV",
             "IncludeVAT": "NO",
         }
     }
+
+    if date_start is not None and date_end is not None:
+        direct_params['params']['DateRangeType'] = 'CUSTOM_DATE'
+        direct_params['params']['SelectionCriteria'] = {'DateFrom': date_start, 'DateTo': date_end}
+
+
+    if goals is not None:
+        direct_params['params']['Goals'] = [goals]
+        direct_params['params']['AttributionModels'] = ['LSC']
 
     response_report = requests.get(url=URL_DIRECT_REPORTS, headers=direct_headers, json=direct_params)
     return response_report
@@ -101,7 +114,7 @@ def get_daily_data_request_tg(token: str, goals: int, login: str) -> requests.Re
         "params": {
             "SelectionCriteria": {},
             "FieldNames": field_names,
-            "ReportName": f"Report_telegram_{date.today()}",
+            "ReportName": f"Report_telegram_{datetime.today()}",
             "ReportType": "CUSTOM_REPORT",
             "DateRangeType": "YESTERDAY",
             "Format": "TSV",

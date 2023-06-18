@@ -5,30 +5,16 @@ from service.yandex.yandex_queries import (
     query_get_arr_campaigns,
 )
 from telegram_bot.tg_service.tg_process import (
-    process_direct,
     process_direct_tg,
     make_messages,
 )
+
+from service.juice.process import process_direct
 
 from loguru import logger
 import time
 from datetime import datetime, timedelta
 
-
-def get_report(token: str, dashboard_id: int, goals: int, login: str) -> None:
-    """Request data from Direct"""
-    response_report = get_daily_data_request(token, dashboard_id, goals, login)
-    if response_report.status_code == 200:
-        logger.info("Successfully connected to Direct")
-        csv_direct = response_report.text
-        process_direct(csv_direct, dashboard_id)
-    elif response_report.status_code == 201 or response_report.status_code == 202:
-        time.sleep(20)
-        get_report(token, dashboard_id, goals, login)
-    else:
-        logger.error(
-            f"Error while connecting to Yandex.Direct. Response {response_report.status_code}. {response_report.text}"
-        )
 
 
 async def arr_goals(token: str, login: str) -> list[dict] | str:
@@ -72,7 +58,6 @@ def get_report_tg(token: str, goals: int, login: str) -> tuple[str, str, str] | 
             yesterday = datetime.strftime(datetime.now() - timedelta(days=1), "%d.%m.%Y")
             return [f"<b>📅 {login} | Не было рекламных кампаний за {yesterday}\n\n</b>"]
         tg_message = make_messages(df, login, goals=False if goals is None else True)
-        logger.info(tg_message)
         return tg_message
     elif response_report.status_code == 400:
         if response_report.json()["error"]["error_detail"].startswith(
@@ -85,3 +70,19 @@ def get_report_tg(token: str, goals: int, login: str) -> tuple[str, str, str] | 
             f"{response_report.text}"
         )
         return ["Error"]
+
+
+def load_daily_direct(account_id, login, token, is_agency, goal, date_start, date_end):
+    response_report = get_daily_data_request(token, goal, login, account_id, date_start, date_end)
+    if response_report.status_code == 200:
+        logger.info("Successfully connected to Direct")
+        csv_direct = response_report.text
+        process_direct(csv_direct, account_id)
+    elif response_report.status_code == 201 or response_report.status_code == 202:
+        time.sleep(20)
+        load_daily_direct(account_id, login, token, is_agency, goal, date_start, date_end)
+    else:
+        logger.error(
+            f"Error while connecting to Yandex.Direct. Response {response_report.status_code}. {response_report.text} "
+            f"for {account_id}"
+        )
