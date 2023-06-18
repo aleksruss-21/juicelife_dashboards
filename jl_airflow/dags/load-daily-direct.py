@@ -6,48 +6,34 @@ from airflow.models.param import Param
 import datetime
 
 
-async def direct_run(active_users: list):
-    d
-
-
-def direct_daily(is_test: bool) -> bool:
+def direct_daily(account_id: int, date_start: str, date_end: str) -> bool:
     from loguru import logger
     from storage.jl_db import get_active_users
+    from service.yandex.yandex_main import load_daily_direct
 
     """Parse daily data from Yandex.Direct"""
     logger.info("Launching parse daily data from Direct")
-    active_users = get_active_users()
-    asyncio.run(direct_run())
-    for dashboard_id, token, goal, login in active_users:
-        get_report(token=token, dashboard_id=dashboard_id, goals=goal, login=login)
-    # logger.info(is_test)
-    # users = get_users_tg()
-    # for tg_id, login, token, goal in users:
-    #     logger.info(tg_id)
-    #     mg = get_report_tg(token, goal, login)
-    #     if mg is None:
-    #         continue
-    #     elif mg[0] == "Error":
-    #         continue
-    #     else:
-    #         asyncio.run(telegram_daily(mg, tg_id, login))
-    # return True
+    active_users = get_active_users(None if account_id is None else account_id)
+    for account_id, login, token, is_agency, goal in active_users:
+        load_daily_direct(account_id, login, token, is_agency, goal, date_start, date_end)
+    return True
 
 
 with DAG(
     dag_id="load-daily-direct",
-    schedule="2 6 * * *",
+    schedule="2 3 * * *",
     params = {
-        "test_launch": Param(False, type="boolean"),
-        "counter_id": Param(type="int"),
-        "date_start": Param(type="str"),
-        "date_end": Param(type="str")},
-    start_date=datetime.datetime(2023, 4, 23),
+        "account_id": Param(default=None, type=["null", "integer"]),
+        "date_start": Param(default=None, type=["null", "string"]),
+        "date_end": Param(default=None, type=["null", "string"])},
+    start_date=datetime.datetime(2023, 6, 18),
+    catchup=False
 ) as dag:
 
     t1 = PythonOperator(
-        task_id="telegram_daily",
-        python_callable=send_report_telegram,
-        op_args=["{{params['test_launch']}}"]
+        task_id="load-daily-direct",
+        python_callable=direct_daily,
+        op_args=["{{params['account_id']}}", "{{params['date_start']}}", "{{params['date_end']}}"]
         )
     t1
+

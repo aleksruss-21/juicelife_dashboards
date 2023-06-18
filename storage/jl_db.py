@@ -32,10 +32,11 @@ def create_connection():
     return conn
 
 
-def upload_direct_from_pandas(df: pandas.DataFrame, dashboard_id: int, connect: sqlalchemy.future.Engine) -> None:
+def upload_daily_direct(df: pandas.DataFrame, dashboard_id: int) -> None:
     """Upload report to database using pandas"""
-    df.to_sql(f"dashboard_{dashboard_id}", con=connect, if_exists="append", index=False)
-    logger.info(f"Successfully uploaded for dashboard_{dashboard_id}!")
+    connect = create_instance()
+    df.to_sql(f"yd_stats", schema="jl", con=connect, if_exists="append", index=False)
+    logger.info(f"Successfully uploaded for account_{dashboard_id}!")
 
 
 def delete_from_report(date: str, dashboard_id: int, conn: sqlalchemy.future.Engine) -> None:
@@ -43,22 +44,15 @@ def delete_from_report(date: str, dashboard_id: int, conn: sqlalchemy.future.Eng
     conn.execute(f"DELETE from dashboard_{dashboard_id} WHERE date = '{date}'")
 
 
-def check_exists_dash(dashboard_id: int, cur: sqlalchemy.future.Engine) -> bool:
-    """Check if exists table"""
-    query = (
-        f"SELECT EXISTS (SELECT FROM pg_tables WHERE pg_tables.schemaname = 'public' "
-        f"AND tablename = 'dashboard_{dashboard_id}')"
-    )
-    result = cur.execute(query).fetchone()[0]
-    return result
-
-
-def get_active_users() -> list[tuple[int, str, int, str]]:
+def get_active_users(account_id: int) -> list[tuple[int, str, str, bool, bool]]:
     """Get from database active users for getting Data from Yandex.Direct"""
     conn = create_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM jl.yd_accounts WHERE is_active is TRUE")
-    active_users = [(row[0], row[2], row[5], row[4]) for row in cursor.fetchall()]
+    sql_query = "SELECT * FROM jl.yd_accounts WHERE is_active is TRUE"
+    if account_id is not None:
+        sql_query += f" AND account_id = {account_id}"
+    cursor.execute(sql_query)
+    active_users = [(row[0], row[2], row[3], row[4], row[5]) for row in cursor.fetchall()]
     return active_users
 
 
